@@ -7,30 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { 
-            font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #f8fafc; 
-        }
-        .game-card { 
-            background: white; 
-            border-radius: 24px; 
-            border: 1px solid #f1f5f9; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-            overflow: hidden;
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .game-card { background: white; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
         tr:nth-child(even) { background-color: #fdfdfd; }
         .unit-cell { font-weight: 800; color: #64748b; background-color: #f8fafc; width: 35%; }
         .game-link { font-weight: 700; color: #4f46e5; text-decoration: none; }
         .game-link:hover { text-decoration: underline; color: #4338ca; }
     </style>
-    
     <script>
         (function() {
-            // 取得與首頁一致的累積題數變數
             const quizCount = parseInt(localStorage.getItem('quizTotalCount') || '0');
             const quizPassed = localStorage.getItem('quizPassed');
-            
-            // 邏輯修正：判斷門檻改為 10，並修正彈窗文字
             if (!quizPassed && quizCount < 10) {
                 alert(`🔒 遊戲區尚未解鎖：\n目前已累積答題：${quizCount}/10\n請先回到首頁完成一輪測驗喔！`);
                 window.location.href = 'index.html';
@@ -49,7 +36,6 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
             <div class="flex flex-col">
                 <h2 class="text-xl font-black text-emerald-600 mb-4 px-2">Here We Go 7</h2>
                 <div class="game-card">
@@ -84,8 +70,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td class="p-4 border-b border-slate-50 unit-cell">Starter</td><td class="p-4 border-b border-slate-50"><a href="https://wordwall.net/tc/resource/82626842/%E8%8B%B1%E6%96%87/phonics-review%E8%BE%A8%E9%9F%B3%E9%81%94%E4%BA%BA" target="_blank" class="game-link">Wordwall</a></td></tr>
-                            <tr><td class="p-4 border-b border-slate-50 unit-cell">Unit 1</td><td class="p-4 border-b border-slate-50"><a href="https://play.blooket.com/play?hwId=69a3a518afccb56004323164&gameMode=bricks&surfaceStrategy=random" target="_blank" class="game-link">Zorblitz</a></td></tr>
+                            <tr><td class="p-4 border-b border-slate-50 unit-cell">Starter</td><td class="p-4 border-b border-slate-50"><a href="https://wordwall.net/tc/resource/82626842" target="_blank" class="game-link">Wordwall</a></td></tr>
+                            
+                            <tr>
+                                <td class="p-4 border-b border-slate-50 unit-cell">Unit 1</td>
+                                <td class="p-4 border-b border-slate-50">
+                                    <a href="https://solo.blooket.com/bricks?id=69ad3d7dc8df2399a20790d7" target="_blank" class="game-link">Zorblitz</a>
+                                    <span class="mx-1 text-slate-300">|</span>
+                                    
+                                    <a href="https://wordwall.net/tc/resource/82323563" target="_blank" class="game-link">Wordwall</a>
+                                    
+                                    <span class="mx-1 text-slate-300">|</span>
+                                    <a href="https://solo.blooket.com/bubble?id=69ad3b1f45ba6960a34d449a" target="_blank" class="game-link">Plushie</a>
+                                </td>
+                            </tr>
+                            
                             <tr><td class="p-4 border-b border-slate-50 unit-cell">Unit 2</td><td class="p-4 border-b border-slate-50"></td></tr>
                             <tr><td class="p-4 border-b border-slate-50 unit-cell">Review 1</td><td class="p-4 border-b border-slate-50"></td></tr>
                             <tr><td class="p-4 border-b border-slate-50 unit-cell">Unit 3</td><td class="p-4 border-b border-slate-50"></td></tr>
@@ -95,9 +94,7 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
-
 </body>
 </html>
