@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圖片練習</title>
+    <title>看圖問答練習</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
@@ -11,15 +11,10 @@
         .category-btn.active { background-color: #4f46e5; color: white; border-color: #4338ca; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-        
         .main-container { height: calc(100vh - 40px); }
         
-        /* 讓嵌入的頁面填滿右側區域，並移除邊框 */
-        #content-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        /* 讓 iframe 融入背景，不顯示邊框 */
+        #content-frame { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body class="p-4 flex items-center justify-center">
@@ -32,38 +27,44 @@
             <div id="category-list" class="space-y-1 overflow-y-auto custom-scrollbar pr-1 flex-grow"></div>
         </div>
 
-        <div class="flex-grow flex flex-col h-full bg-white relative">
-            <iframe id="content-frame" src="QA_animal.html"></iframe>
+        <div class="flex-grow flex flex-col h-full bg-white">
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                <h3 id="current-category-title" class="text-xl font-bold text-slate-800 tracking-wider">Animals</h3>
+                <span class="text-slate-400 text-xs">QA Practice</span>
+            </div>
+
+            <div class="flex-grow overflow-hidden">
+                <iframe id="content-frame" src="QA_animal.html" title="Practice Content"></iframe>
+            </div>
         </div>
     </div>
 
     <script>
-        // 主題列表
         const categories = ["Animals", "Houses", "Fruit", "Actions", "Time", "Feelings", "Weather", "Subjects", "Drinks", "Activities 1", "Places 1", "Activities 2", "Places 2", "Countries", "Jobs", "Transportation", "Body Parts", "Illness", "Clothes", "Items", "Food 1", "Routines", "Food 2", "Festivals"];
 
         function initCategories() {
             const list = document.getElementById('category-list');
             const frame = document.getElementById('content-frame');
+            const title = document.getElementById('current-category-title');
 
             categories.forEach((cat, index) => {
                 const btn = document.createElement('button');
                 btn.className = "category-btn w-full text-left px-3 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-white hover:text-indigo-600 transition-all text-sm mb-1";
                 btn.textContent = cat;
                 
-                // 預設將第一個項目（Animals）設為選中狀態樣式
                 if (index === 0) btn.classList.add('active');
 
                 btn.onclick = () => {
-                    // 切換按鈕樣式
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    
+                    // 當點擊目錄時，標題會自動同步為目錄上的文字（如 Animals, Houses 等）
+                    title.textContent = cat;
 
-                    // 邏輯切換：點擊不同主題時，改變 iframe 的網址
                     if (cat === "Animals") {
                         frame.src = 'QA_animal.html';
                     } else {
-                        // 其他主題目前尚未建立頁面，暫時載入空白或提示頁
-                        // frame.src = 'about:blank'; 
+                        frame.src = 'about:blank';
                     }
                 };
                 list.appendChild(btn);
