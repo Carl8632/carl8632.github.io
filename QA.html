@@ -14,14 +14,11 @@
         
         .main-container { height: calc(100vh - 40px); }
         
-        /* 預留空間的燈泡樣式 */
-        .lamp-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        /* 讓嵌入的頁面填滿右側區域，並移除邊框 */
+        #content-frame {
+            width: 100%;
             height: 100%;
-            opacity: 0.2;
+            border: none;
         }
     </style>
 </head>
@@ -35,16 +32,8 @@
             <div id="category-list" class="space-y-1 overflow-y-auto custom-scrollbar pr-1 flex-grow"></div>
         </div>
 
-        <div class="flex-grow flex flex-col h-full bg-white">
-            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                <h3 id="current-category-title" class="text-xl font-bold text-slate-800">Animals</h3>
-            </div>
-
-            <div class="flex-grow flex items-center justify-center">
-                <div class="lamp-placeholder">
-                    <img src="https://cdn-icons-png.flaticon.com/512/702/702797.png" alt="Pending" class="w-24 h-24">
-                </div>
-            </div>
+        <div class="flex-grow flex flex-col h-full bg-white relative">
+            <iframe id="content-frame" src="QA_animal.html"></iframe>
         </div>
     </div>
 
@@ -54,25 +43,27 @@
 
         function initCategories() {
             const list = document.getElementById('category-list');
+            const frame = document.getElementById('content-frame');
+
             categories.forEach((cat, index) => {
                 const btn = document.createElement('button');
                 btn.className = "category-btn w-full text-left px-3 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-white hover:text-indigo-600 transition-all text-sm mb-1";
                 btn.textContent = cat;
                 
-                // 預設將第一個項目（Animals）設為選中狀態
+                // 預設將第一個項目（Animals）設為選中狀態樣式
                 if (index === 0) btn.classList.add('active');
 
                 btn.onclick = () => {
                     // 切換按鈕樣式
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    
-                    // 更新標題
-                    document.getElementById('current-category-title').textContent = cat;
 
-                    // 特定邏輯：如果是 Animals，點擊後跳轉
+                    // 邏輯切換：點擊不同主題時，改變 iframe 的網址
                     if (cat === "Animals") {
-                        window.location.href = 'QA_animal.html';
+                        frame.src = 'QA_animal.html';
+                    } else {
+                        // 其他主題目前尚未建立頁面，暫時載入空白或提示頁
+                        // frame.src = 'about:blank'; 
                     }
                 };
                 list.appendChild(btn);
