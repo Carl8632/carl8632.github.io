@@ -49,7 +49,7 @@
     </div>
 
     <script>
-        // 主題順序：確保 Animals 在第一個
+        // 主題列表
         const categories = ["Animals", "Houses", "Fruit", "Actions", "Time", "Feelings", "Weather", "Subjects", "Drinks", "Activities 1", "Places 1", "Activities 2", "Places 2", "Countries", "Jobs", "Transportation", "Body Parts", "Illness", "Clothes", "Items", "Food 1", "Routines", "Food 2", "Festivals"];
 
         function initCategories() {
@@ -59,13 +59,21 @@
                 btn.className = "category-btn w-full text-left px-3 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-white hover:text-indigo-600 transition-all text-sm mb-1";
                 btn.textContent = cat;
                 
-                // 預設將 Animals 設為選中狀態
+                // 預設將第一個項目（Animals）設為選中狀態
                 if (index === 0) btn.classList.add('active');
 
                 btn.onclick = () => {
+                    // 切換按鈕樣式
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    
+                    // 更新標題
                     document.getElementById('current-category-title').textContent = cat;
+
+                    // 特定邏輯：如果是 Animals，點擊後跳轉
+                    if (cat === "Animals") {
+                        window.location.href = 'QA_animal.html';
+                    }
                 };
                 list.appendChild(btn);
             });

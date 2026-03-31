@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Animal - Lion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        
+        /* 對話框小尾巴 */
+        .bubble-right::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 20px;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent #dcfce7;
+        }
+        .bubble-left::after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 20px;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent #f1f5f9 transparent transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+        
+        <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">
+            <button onclick="window.location.href='QA.html'" class="text-sm font-bold opacity-80 hover:opacity-100">← 返回</button>
+            <h1 class="font-bold tracking-widest uppercase">Animals</h1>
+            <div class="w-8"></div>
+        </div>
+
+        <div class="p-8 flex flex-col items-center">
+            
+            <div class="mb-12">
+               <img src="images/QA_lion.png" alt="Test Lion" class="w-72 h-auto rounded-2xl shadow-xl">
+            </div>
+
+            <div class="w-full space-y-6">
+                
+                <div class="flex items-start justify-end space-x-3 group">
+                    <div class="relative bg-green-100 p-5 rounded-2xl shadow-sm max-w-[75%] bubble-right cursor-pointer hover:bg-green-200 transition-colors" 
+                         onclick="speak('How many lions are there?')">
+                        <p class="text-2xl font-bold text-slate-800">How many lions are there?</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex-shrink-0 flex items-center justify-center shadow-md text-2xl">👨‍🏫</div>
+                </div>
+
+                <div class="flex items-start space-x-3 group">
+                    <div class="w-12 h-12 bg-orange-400 rounded-full flex-shrink-0 flex items-center justify-center shadow-md text-2xl">🧒</div>
+                    <div class="relative bg-slate-100 p-5 rounded-2xl shadow-sm max-w-[75%] bubble-left cursor-pointer hover:bg-slate-200 transition-colors"
+                         onclick="speak('There are three lions.')">
+                        <p class="text-2xl font-bold text-slate-800">There are three lions.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 text-center">
+            <p class="text-slate-400 text-xs font-medium">點擊對話框即可聆聽發音</p>
+        </div>
+    </div>
+
+    <script>
+        function speak(text) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'en-US';
+            msg.rate = 0.9;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(msg);
+        }
+    </script>
+</body>
+</html>
