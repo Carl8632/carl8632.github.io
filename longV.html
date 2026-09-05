@@ -3,70 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CVC 拼讀練習</title>
+    <title>長母音拼讀練習</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #333;
         }
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
         .container {
-            max-width: 900px;
+            max-width: 650px;
             margin: 0 auto;
+            padding: 0 10px;
         }
-        .vowel-section {
-            margin-bottom: 35px;
-        }
-        .vowel-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #2980b9;
-            border-left: 5px solid #3498db;
-            padding-left: 10px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-        .grid {
+        .header-row {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
+            grid-template-columns: 1fr 1fr 1fr 55px;
+            gap: 6px;
+            padding: 18px 5px 8px 5px;
+            font-size: 21px;
+            font-weight: bold;
+            color: #e67e22;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .header-row {
+                display: none;
+            }
+        }
+        .group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 55px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 8px;
+            background: #ffffff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        /* 針對 U 有 4 個欄位的特例處理 */
+        .header-row.four-cols, .group-row.four-cols {
+            grid-template-columns: 1fr 1fr 1fr 1fr 55px;
+        }
+        @media (max-width: 480px) {
+            .group-row, .group-row.four-cols {
+                grid-template-columns: 1fr 1fr 45px;
+                gap: 6px;
+                padding: 6px 8px;
+            }
         }
         .card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 18px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: #fdfdfd;
+            border: 1.5px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 10px 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
-            border: 2px solid #e1e8ed;
+            transition: all 0.2s;
+            min-height: 40px;
+            text-align: center;
         }
         .card:hover {
-            transform: translateY(-3px);
             background-color: #eef9ff;
             border-color: #3498db;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .word {
-            font-size: 28px;
+        .spelling {
+            font-size: 18px;
             font-weight: bold;
             color: #2c3e50;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+        }
+        .together-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .together-btn:hover {
+            background-color: #2980b9;
         }
         .back-link {
             display: block;
             text-align: center;
-            margin: 40px 0;
+            margin: 30px 0;
             color: #3498db;
             text-decoration: none;
             font-weight: bold;
+            font-size: 15px;
         }
         .back-link:hover {
             text-decoration: underline;
@@ -76,74 +117,130 @@
 <body>
 
 <div class="container">
-    <h1>CVC 拼讀練習</h1>
+    <h1>長母音拼讀練習</h1>
     <div id="content-container"></div>
-    <a href="https://carl8632.github.io/index.html" class="back-link">← 返回英語學習網站首頁</a>
+    <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
 </div>
 
 <script>
-    // 依 a, e, i, o, u 五個母音分類的 CVC 單字清單（已補齊高頻核心字，共85個）
-    const cvcGroups = [
+    const longVowelData = [
         {
-            vowel: "Short A",
-            words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"]
+            columns: ["a_e", "ai", "ay"],
+            rows: [
+                [{word: "gate"}, {word: "pail"}, {word: "day"}],
+                [{word: "wave"}, {word: "rain"}, {word: "play"}]
+            ]
         },
         {
-            vowel: "Short E",
-            words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"]
+            columns: ["e_e", "ea", "ee"],
+            rows: [
+                [{word: "Eve"}, {word: "peach"}, {word: "green"}],
+                [{word: "these"}, {word: "tea"}, {word: "tree"}]
+            ]
         },
         {
-            vowel: "Short I",
-            words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"]
+            columns: ["i_e", "ie", "igh"],
+            rows: [
+                [{word: "bite"}, {word: "pie"}, {word: "light"}],
+                [{word: "rice"}, {word: "tie"}, {word: "night"}]
+            ]
         },
         {
-            vowel: "Short O",
-            words: ["dog", "log", "jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"]
+            columns: ["o_e", "oa", "ow"],
+            rows: [
+                [{word: "hole"}, {word: "boat"}, {word: "snow"}],
+                [{word: "mole"}, {word: "goat"}, {word: "yellow"}]
+            ]
         },
         {
-            vowel: "Short U",
-            words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"]
+            columns: ["u_e", "ue", "ui", "ew"],
+            rows: [
+                [{word: "cute"}, {word: "blue"}, {word: "fruit"}, {word: "few"}],
+                [{word: "tube"}, {word: "glue"}, {word: "suit"}, {word: "draw"}]
+            ]
         }
     ];
 
     const container = document.getElementById('content-container');
 
-    // 瀏覽器語音發音函式
+    // 單字發音
     function speakWord(word) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(word);
             utterance.lang = 'en-US';
-            utterance.rate = 0.85; // 稍微放慢方便學生聽拼讀
+            utterance.rate = 0.85; 
             window.speechSynthesis.speak(utterance);
         } else {
             alert('您的瀏覽器不支援語音朗讀功能');
         }
     }
 
-    // 動態渲染五個母音區塊與單字卡片
-    cvcGroups.forEach(group => {
-        const section = document.createElement('div');
-        section.className = 'vowel-section';
+    // 整列依序唸（帶有停頓間隔，秒數可自行於下方調整）
+    function speakRow(words) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            
+            let index = 0;
+            function playNext() {
+                if (index < words.length) {
+                    const utterance = new SpeechSynthesisUtterance(words[index]);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.85;
+                    utterance.onend = () => {
+                        index++;
+                        setTimeout(playNext, 350); // 兩字之間的停頓間隔 (毫秒)
+                    };
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+            playNext();
+        } else {
+            alert('您的瀏覽器不支援語音朗讀功能');
+        }
+    }
 
-        const title = document.createElement('div');
-        title.className = 'vowel-title';
-        title.innerText = group.vowel;
-        section.appendChild(title);
+    // 動態渲染網頁內容
+    longVowelData.forEach(group => {
+        const isFour = group.columns.length === 4;
 
-        const grid = document.createElement('div');
-        grid.className = 'grid';
-
-        group.words.forEach(w => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<div class="word">${w}</div>`;
-            card.addEventListener('click', () => speakWord(w));
-            grid.appendChild(card);
+        // 表頭（發音組合字放大至 21px、顏色改為醒目橘色 #e67e22）
+        const headerRow = document.createElement('div');
+        headerRow.className = isFour ? 'header-row four-cols' : 'header-row';
+        let headerHtml = '';
+        group.columns.forEach(col => {
+            headerHtml += `<div>${col}</div>`;
         });
+        headerHtml += `<div style="color: #34495e; font-size: 15px;">一起唸</div>`;
+        headerRow.innerHTML = headerHtml;
+        container.appendChild(headerRow);
 
-        section.appendChild(grid);
-        container.appendChild(section);
+        // 內容列
+        group.rows.forEach(rowItems => {
+            const row = document.createElement('div');
+            row.className = isFour ? 'group-row four-cols' : 'group-row';
+
+            rowItems.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <span class="spelling">${item.word}</span>
+                `;
+                card.addEventListener('click', () => speakWord(item.word));
+                row.appendChild(card);
+            });
+
+            // 該列的一起唸按鈕
+            const btn = document.createElement('button');
+            btn.className = 'together-btn';
+            btn.title = "一起唸";
+            btn.innerHTML = `🔊`;
+            const rowWordList = rowItems.map(i => i.word);
+            btn.addEventListener('click', () => speakRow(rowWordList));
+
+            row.appendChild(btn);
+            container.appendChild(row);
+        });
     });
 </script>
 
