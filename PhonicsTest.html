@@ -224,6 +224,7 @@
     let isPaused = false;
     let currentTarget = null; 
     let dropSpeed = 2200;
+    let spawnCountTracker = 0;
 
     let audioCtx = null;
 
@@ -340,6 +341,7 @@
         document.getElementById('restartBtn').disabled = false;
         
         score = 0;
+        spawnCountTracker = 0;
         document.getElementById('score').innerText = score;
         dropSpeed = 2200;
         gameRunning = true;
@@ -422,8 +424,33 @@
             if (boardData[0][c] !== null) return;
         }
 
+        spawnCountTracker++;
+
+        // 檢查盤面上是否有任何已經著陸堆疊 (stacked) 的方塊
+        let hasStackedBlocks = false;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (boardData[r][c] !== null && boardData[r][c].state === 'stacked') {
+                    hasStackedBlocks = true;
+                    break;
+                }
+            }
+            if (hasStackedBlocks) break;
+        }
+
+        let count;
+        if (spawnCountTracker <= 2) {
+            // 1. 遊戲前兩次強制 3 個方塊
+            count = 3;
+        } else if (hasStackedBlocks) {
+            // 2. 只要已有方塊著陸堆疊，就強制一次只掉落 1 個方塊，提供喘息空間
+            count = 1;
+        } else {
+            // 3. 否則維持原本隨機 1 或 2 個方塊
+            count = Math.random() < 0.65 ? 1 : 2;
+        }
+
         let shuffledCols = [0, 1, 2].sort(() => 0.5 - Math.random());
-        let count = Math.random() < 0.65 ? 1 : 2;
 
         for (let i = 0; i < count; i++) {
             let targetCol = shuffledCols[i];
@@ -530,7 +557,6 @@
             }, 200);
         } else {
             playWrongSound();
-            // 答錯扣 10 分，最低為 0 分
             score = Math.max(0, score - 10);
             document.getElementById('score').innerText = score;
             cellDiv.classList.add('wrong-anim');
