@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVC 拼讀練習</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .vowel-section {
+            margin-bottom: 35px;
+        }
+        .vowel-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2980b9;
+            border-left: 5px solid #3498db;
+            padding-left: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+            border: 2px solid #e1e8ed;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            background-color: #eef9ff;
+            border-color: #3498db;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .word {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 40px 0;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>CVC 拼讀練習</h1>
+    <div id="content-container"></div>
+    <a href="https://carl8632.github.io/index.html" class="back-link">← 返回英語學習網站首頁</a>
+</div>
+
+<script>
+    // 依 a, e, i, o, u 五個母音分類的 CVC 單字清單（已補齊高頻核心字，共85個）
+    const cvcGroups = [
+        {
+            vowel: "Short A",
+            words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"]
+        },
+        {
+            vowel: "Short E",
+            words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"]
+        },
+        {
+            vowel: "Short I",
+            words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"]
+        },
+        {
+            vowel: "Short O",
+            words: ["dog", "log", "jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"]
+        },
+        {
+            vowel: "Short U",
+            words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"]
+        }
+    ];
+
+    const container = document.getElementById('content-container');
+
+    // 瀏覽器語音發音函式
+    function speakWord(word) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; // 稍微放慢方便學生聽拼讀
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('您的瀏覽器不支援語音朗讀功能');
+        }
+    }
+
+    // 動態渲染五個母音區塊與單字卡片
+    cvcGroups.forEach(group => {
+        const section = document.createElement('div');
+        section.className = 'vowel-section';
+
+        const title = document.createElement('div');
+        title.className = 'vowel-title';
+        title.innerText = group.vowel;
+        section.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+
+        group.words.forEach(w => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="word">${w}</div>`;
+            card.addEventListener('click', () => speakWord(w));
+            grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        container.appendChild(section);
+    });
+</script>
+
+</body>
+</html>
