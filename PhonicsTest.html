@@ -9,29 +9,23 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             color: #333;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 5px;
-            font-size: 24px;
-            text-align: center;
-        }
         .score-board {
-            font-size: 16px;
+            font-size: 13px;
             color: #7f8c8d;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-weight: bold;
         }
         .game-container {
             width: 320px;
             background: #111b21;
             border-radius: 12px;
-            padding: 10px;
+            padding: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             position: relative;
             box-sizing: border-box;
@@ -39,20 +33,20 @@
         .grid-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(10, 42px);
-            gap: 4px;
+            grid-template-rows: repeat(14, 34px);
+            gap: 3px;
             background: #0d1418;
-            padding: 6px;
+            padding: 5px;
             border-radius: 8px;
         }
         .cell {
             background: rgba(255, 255, 255, 0.03);
             border: 1px dashed rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
+            border-radius: 5px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #fff;
             user-select: none;
@@ -85,15 +79,15 @@
             background: #e74c3c !important;
         }
         .control-panel {
-            margin-top: 15px;
+            margin-top: 12px;
             text-align: center;
             width: 320px;
         }
         .prompt-box {
             background: #fff;
             border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
@@ -110,11 +104,11 @@
             background: #3498db;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             transition: background 0.2s;
             white-space: nowrap;
         }
@@ -124,16 +118,16 @@
         .btn-row {
             display: flex;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .action-btn {
             flex: 1;
             background: #2ecc71;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 9px;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
@@ -182,11 +176,11 @@
         .back-link {
             display: block;
             text-align: center;
-            margin-top: 15px;
+            margin-top: 10px;
             color: #3498db;
             text-decoration: none;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
         }
         .back-link:hover {
             text-decoration: underline;
@@ -195,7 +189,6 @@
 </head>
 <body>
 
-<h1>英語拼讀俄羅斯方塊</h1>
 <div class="score-board">得分: <span id="score">0</span></div>
 
 <div class="game-container">
@@ -222,7 +215,7 @@
 <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
 
 <script>
-    const rows = 10;
+    const rows = 14;
     const cols = 3;
     let boardData = [];
     let gameInterval = null;
@@ -230,10 +223,67 @@
     let gameRunning = false;
     let isPaused = false;
     let currentTarget = null; 
-    let dropSpeed = 1500;
+    let dropSpeed = 2200;
+
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playPopSound() {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        
+        notes.forEach((freq, index) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + index * 0.05);
+
+            gain.gain.setValueAtTime(0.15, now + index * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.05 + 0.25);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + index * 0.05);
+            osc.stop(now + index * 0.05 + 0.25);
+        });
+    }
+
+    function playWrongSound() {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(120, now + 0.2);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.2);
+    }
 
     const gamePool = [
-        // 短母音
         { display: "cat", sound: "cat" }, { display: "bat", sound: "bat" }, { display: "hat", sound: "hat" },
         { display: "pan", sound: "pan" }, { display: "can", sound: "can" }, { display: "map", sound: "map" },
         { display: "bed", sound: "bed" }, { display: "red", sound: "red" }, { display: "pen", sound: "pen" },
@@ -241,14 +291,12 @@
         { display: "dog", sound: "dog" }, { display: "pot", sound: "pot" }, { display: "box", sound: "box" },
         { display: "bug", sound: "bug" }, { display: "run", sound: "run" }, { display: "cup", sound: "cup" },
         
-        // 長母音
         { display: "gate", sound: "gate" }, { display: "day", sound: "day" }, { display: "rain", sound: "rain" },
         { display: "green", sound: "green" }, { display: "tree", sound: "tree" }, { display: "peach", sound: "peach" },
         { display: "bite", sound: "bite" }, { display: "pie", sound: "pie" }, { display: "light", sound: "light" },
         { display: "boat", sound: "boat" }, { display: "snow", sound: "snow" }, { display: "hole", sound: "hole" },
         { display: "blue", sound: "blue" }, { display: "cute", sound: "cute" }, { display: "fruit", sound: "fruit" },
 
-        // 子音組
         { display: "shirt", sound: "shirt" }, { display: "fish", sound: "fish" },
         { display: "chips", sound: "chips" }, { display: "cheese", sound: "cheese" },
         { display: "three", sound: "three" }, { display: "teeth", sound: "teeth" },
@@ -283,6 +331,7 @@
     }
 
     function startGame() {
+        initAudio();
         document.getElementById('gameOverOverlay').style.display = 'none';
         document.getElementById('startBtn').innerText = '進行中';
         document.getElementById('startBtn').disabled = true;
@@ -292,21 +341,17 @@
         
         score = 0;
         document.getElementById('score').innerText = score;
-        dropSpeed = 1500;
+        dropSpeed = 2200;
         gameRunning = true;
         isPaused = false;
         
         initBoardData();
         renderBoard();
 
-        // 初始生成第一行方塊
         spawnRow();
         renderBoard();
-
-        // 挑選第一道題目並發音
         pickNewQuestion();
 
-        // 方塊逐秒下落迴圈
         if (gameInterval) clearInterval(gameInterval);
         gameInterval = setInterval(gameLoop, dropSpeed);
     }
@@ -336,7 +381,6 @@
     function gameLoop() {
         if (!gameRunning || isPaused) return;
 
-        // 1. 檢查最頂層（row 0）是否有堆疊方塊，若有則 GAME OVER
         for (let c = 0; c < cols; c++) {
             if (boardData[0][c] !== null && boardData[0][c].state === 'stacked') {
                 gameOver();
@@ -344,7 +388,6 @@
             }
         }
 
-        // 2. 讓所有正在下落的方塊往下移動一格
         for (let r = rows - 1; r >= 0; r--) {
             for (let c = 0; c < cols; c++) {
                 if (boardData[r][c] && boardData[r][c].state === 'active') {
@@ -358,7 +401,6 @@
             }
         }
 
-        // 檢查堆疊是否頂到最上方
         for (let c = 0; c < cols; c++) {
             if (boardData[0][c] !== null && boardData[0][c].state === 'stacked') {
                 renderBoard();
@@ -367,9 +409,12 @@
             }
         }
 
-        // 3. 頂部生成新的一行方塊
         spawnRow();
         renderBoard();
+
+        if (!currentTarget) {
+            pickNewQuestion();
+        }
     }
 
     function spawnRow() {
@@ -392,7 +437,6 @@
         }
     }
 
-    // 從畫面上現有的方塊隨機挑選一個作為目標題目
     function pickNewQuestion() {
         if (!gameRunning) return;
 
@@ -432,14 +476,11 @@
         }
     }
 
-    // 只讓已落地的堆疊方塊（stacked）受地心引力影響向下掉落填補空格，空中的 active 方塊保持不變
     function applyStackedGravity() {
         for (let c = 0; c < cols; c++) {
-            // 從倒數第二列往上檢查堆疊方塊
             for (let r = rows - 2; r >= 0; r--) {
                 if (boardData[r][c] !== null && boardData[r][c].state === 'stacked') {
                     let currentRow = r;
-                    // 一路往下檢查，只要下方是空格就往下掉（只針對 stacked）
                     while (currentRow + 1 < rows && boardData[currentRow + 1][c] === null) {
                         boardData[currentRow + 1][c] = boardData[currentRow][c];
                         boardData[currentRow][c] = null;
@@ -453,46 +494,44 @@
     function handleCellClick(r, c) {
         if (!gameRunning || isPaused || !currentTarget) return;
         let item = boardData[r][c];
-        if (!item) return; // 點擊空白處不處理
+        if (!item) return;
 
         const cellDiv = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
 
-        // 檢查玩家點選的方塊是否符合當前目標聲音（支援畫面中所有同名單字一起消除）
         if (item.sound === currentTarget.sound) {
             let matchCount = 0;
 
-            // 找出畫面上所有符合該 sound 的方塊並全部消除
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     if (boardData[row][col] !== null && boardData[row][col].sound === currentTarget.sound) {
                         boardData[row][col] = null;
                         matchCount++;
-                        // 為被消除的格子加上動畫效果
                         const matchDiv = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
                         if (matchDiv) matchDiv.classList.add('correct-anim');
                     }
                 }
             }
 
+            playPopSound();
+
             score += matchCount * 10;
             document.getElementById('score').innerText = score;
 
-            if (score >= 50 && score % 50 === 0 && dropSpeed > 800) {
-                dropSpeed -= 150;
+            if (score >= 60 && score % 60 === 0 && dropSpeed > 1000) {
+                dropSpeed -= 200;
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, dropSpeed);
             }
 
             setTimeout(() => {
-                // 方塊消除後，只讓已落地的堆疊方塊受地心引力影響下落填補空格
                 applyStackedGravity();
                 renderBoard();
-                // 產生下一題
                 pickNewQuestion();
             }, 200);
         } else {
-            // 答錯：扣分與錯誤動畫
-            score = Math.max(0, score - 3);
+            playWrongSound();
+            // 答錯扣 10 分，最低為 0 分
+            score = Math.max(0, score - 10);
             document.getElementById('score').innerText = score;
             cellDiv.classList.add('wrong-anim');
             setTimeout(() => renderBoard(), 200);
