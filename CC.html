@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CVC 短母音拼讀</title>
+    <title>子音組拼讀</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,15 +22,17 @@
             margin: 0 auto;
         }
         .vowel-section {
-            margin-bottom: 35px;
+            margin-bottom: 25px;
         }
         .vowel-title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
             color: #2980b9;
-            border-left: 5px solid #3498db;
-            padding-left: 10px;
-            margin-bottom: 15px;
+            background: #eef9ff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
             text-transform: uppercase;
         }
         .grid {
@@ -55,7 +57,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .word {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             color: #2c3e50;
             letter-spacing: 1px;
@@ -76,39 +78,38 @@
 <body>
 
 <div class="container">
-    <h1>CVC 短母音拼讀</h1>
+    <h1>子音組拼讀</h1>
     <div id="content-container"></div>
     <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
 </div>
 
 <script>
-    // 原始 CVC 單字清單
-    const cvcGroups = [
-        {
-            vowel: "Short A",
-            words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"]
-        },
-        {
-            vowel: "Short E",
-            words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"]
-        },
-        {
-            vowel: "Short I",
-            words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"]
-        },
-        {
-            vowel: "Short O",
-            words: ["dog", "log", "jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"]
-        },
-        {
-            vowel: "Short U",
-            words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"]
-        }
+    const consonantGroups = [
+        { vowel: "th (無聲)", words: ["three", "teeth", "mouth"] },
+        { vowel: "th (有聲)", words: ["this", "father", "mother"] },
+        { vowel: "wh", words: ["white", "wheel", "whale"] },
+        { vowel: "ph", words: ["photo", "phone", "dolphin"] },
+        { vowel: "sh", words: ["shirt", "fish", "wash"] },
+        { vowel: "ch", words: ["chips", "cheese", "lunch"] },
+        { vowel: "ng", words: ["sing", "king", "song"] },
+        { vowel: "nk", words: ["sink", "pink", "rink"] },
+        { vowel: "bl", words: ["black", "block", "blue"] },
+        { vowel: "pl", words: ["plane", "plant", "plum"] },
+        { vowel: "gl", words: ["glad", "glass", "glue"] },
+        { vowel: "cl", words: ["clay", "clean", "clap"] },
+        { vowel: "br", words: ["bread", "brown", "brick"] },
+        { vowel: "pr", words: ["prince", "prize", "print"] },
+        { vowel: "gr", words: ["grapes", "grass", "green"] },
+        { vowel: "cr", words: ["crab", "crush", "cry"] },
+        { vowel: "tr", words: ["train", "tree", "truck"] },
+        { vowel: "dr", words: ["dragonfly", "draw", "drum"] },
+        { vowel: "sp", words: ["spoon", "spy", "spot"] },
+        { vowel: "st", words: ["star", "storm", "stop"] },
+        { vowel: "sk", words: ["ski", "sky", "skin"] }
     ];
 
     const container = document.getElementById('content-container');
 
-    // 瀏覽器語音發音函式
     function speakWord(word) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -121,26 +122,7 @@
         }
     }
 
-    // 處理單字：依首字母排序、去除重複首字母、過濾無效單字
-    cvcGroups.forEach(group => {
-        const seenInitials = new Set();
-        const filteredAndSortedWords = group.words
-            .filter(w => w && w.length >= 2) // 確保單字有效
-            .sort((a, b) => a[0].localeCompare(b[0])) // 依第一個子音字母排序 (b -> z)
-            .filter(w => {
-                const initial = w[0].toLowerCase();
-                if (seenInitials.has(initial)) {
-                    return false; // 如果第一個子音已經出現過，則刪除
-                }
-                seenInitials.add(initial);
-                return true;
-            });
-
-        group.words = filteredAndSortedWords;
-    });
-
-    // 動態渲染五個母音區塊與單字卡片
-    cvcGroups.forEach(group => {
+    consonantGroups.forEach(group => {
         const section = document.createElement('div');
         section.className = 'vowel-section';
 
