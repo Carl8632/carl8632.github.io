@@ -40,6 +40,7 @@
         }
         .group-row {
             display: grid;
+            /* 將手機或電腦版欄位統一設為 1fr，確保每一欄等寬 */
             grid-template-columns: 1fr 1fr 1fr 55px;
             gap: 6px;
             align-items: center;
@@ -55,16 +56,20 @@
         }
         @media (max-width: 480px) {
             .group-row, .group-row.four-cols {
-                grid-template-columns: 1fr 1fr 45px;
-                gap: 6px;
-                padding: 6px 8px;
+                /* 手機版統一欄位均分，不再壓縮第三欄 */
+                grid-template-columns: 1fr 1fr 1fr 45px;
+                gap: 5px;
+                padding: 6px 6px;
+            }
+            .group-row.four-cols {
+                grid-template-columns: 1fr 1fr 1fr 1fr 40px;
             }
         }
         .card {
             background: #fdfdfd;
             border: 1.5px solid #e1e8ed;
             border-radius: 6px;
-            padding: 10px 6px;
+            padding: 10px 4px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -72,13 +77,15 @@
             transition: all 0.2s;
             min-height: 40px;
             text-align: center;
+            width: 100%;
+            box-sizing: border-box;
         }
         .card:hover {
             background-color: #eef9ff;
             border-color: #3498db;
         }
         .spelling {
-            font-size: 18px;
+            font-size: 17px; /* 手機上微調字體，避免單字太長被擠壓 */
             font-weight: bold;
             color: #2c3e50;
             letter-spacing: 0.5px;
@@ -176,7 +183,7 @@
         }
     }
 
-    // 整列依序唸（帶有停頓間隔，秒數可自行於下方調整）
+    // 整列依序唸
     function speakRow(words) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -189,7 +196,7 @@
                     utterance.rate = 0.85;
                     utterance.onend = () => {
                         index++;
-                        setTimeout(playNext, 350); // 兩字之間的停頓間隔 (毫秒)
+                        setTimeout(playNext, 350);
                     };
                     window.speechSynthesis.speak(utterance);
                 }
@@ -204,7 +211,7 @@
     longVowelData.forEach(group => {
         const isFour = group.columns.length === 4;
 
-        // 表頭（發音組合字放大至 21px、顏色改為醒目橘色 #e67e22）
+        // 表頭
         const headerRow = document.createElement('div');
         headerRow.className = isFour ? 'header-row four-cols' : 'header-row';
         let headerHtml = '';
