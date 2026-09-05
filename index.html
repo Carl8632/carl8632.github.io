@@ -19,13 +19,14 @@
             <button onclick="switchStudent()" class="text-sm font-bold text-slate-400 hover:text-red-500 transition">🔄 切換學生 (重置紀錄)</button>
         </div>
 
+        <!-- 功能快捷列 -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 mt-2"> 
             <div onclick="window.location.href='quiz.html'" class="bg-white py-3 px-4 rounded-2xl border border-slate-100 cursor-pointer shadow-sm hover:shadow-md transition flex flex-col items-center text-center">
                 <div class="text-2xl mb-1">🎮</div>
                 <h3 class="font-bold text-slate-800 text-lg">單字測驗</h3>
             </div>
             
-            <div onclick="window.location.href='wall.html'" class="bg-white py-3 px-4 rounded-2xl border border-slate-100 cursor-pointer shadow-sm hover:shadow-md transition flex flex-col items-center text-center">
+            <div onclick="window.location.href='wall.html?v=' + new Date().getTime()" class="bg-white py-3 px-4 rounded-2xl border border-slate-100 cursor-pointer shadow-sm hover:shadow-md transition flex flex-col items-center text-center">
                 <div class="text-2xl mb-1">🖼️</div>
                 <h3 class="font-bold text-slate-800 text-lg">圖片牆</h3>
             </div>
@@ -41,6 +42,18 @@
             </div>
         </div>
 
+        <!-- 拼讀與測驗專區 -->
+        <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
+            <h2 class="text-xl font-bold mb-4 text-slate-700">🔤 自然發音與拼讀</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                <button onclick="window.location.href='cvc1.html'" class="py-3 bg-sky-50 rounded-xl border border-sky-100 font-bold text-sky-600 text-base hover:bg-sky-100 active:scale-95 transition">短母音拼讀1</button>
+                <button onclick="window.location.href='cvc2.html'" class="py-3 bg-sky-50 rounded-xl border border-sky-100 font-bold text-sky-600 text-base hover:bg-sky-100 active:scale-95 transition">短母音拼讀2</button>
+                <button onclick="window.location.href='longV.html'" class="py-3 bg-sky-50 rounded-xl border border-sky-100 font-bold text-sky-600 text-base hover:bg-sky-100 active:scale-95 transition">長母音拼讀</button>
+                <button onclick="window.location.href='PhonicsTest.html'" class="py-3 bg-amber-50 rounded-xl border border-amber-100 font-bold text-amber-600 text-base hover:bg-amber-100 active:scale-95 transition">拼讀測驗</button>
+            </div>
+        </div>
+
+        <!-- 單字庫區塊 -->
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
             <h2 class="text-xl font-bold mb-4 text-slate-700">📚 單字庫</h2>
             <div class="grid grid-cols-2 gap-2 mb-2 text-center">

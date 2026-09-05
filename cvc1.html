@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVC 無聲與有聲拼讀</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 15px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 20px 0 8px 2px;
+            border-left: 4px solid #3498db;
+            padding-left: 8px;
+        }
+        .header-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 55px;
+            gap: 8px;
+            padding: 0 5px 4px 5px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #34495e;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .header-row {
+                display: none;
+            }
+        }
+        .pair-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 55px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            background: #ffffff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        @media (max-width: 480px) {
+            .pair-row {
+                grid-template-columns: 1fr 1fr 45px;
+                gap: 6px;
+                padding: 6px 8px;
+            }
+        }
+        .card {
+            background: #fdfdfd;
+            border: 1.5px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 36px;
+        }
+        .card:hover {
+            background-color: #eef9ff;
+            border-color: #3498db;
+        }
+        .spelling {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+        .together-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 100%;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .together-btn:hover {
+            background-color: #2980b9;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 30px 0;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>CVC 無聲與有聲拼讀</h1>
+    <div id="content-container"></div>
+    <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
+</div>
+
+<script>
+    const contrastData = [
+        {
+            title: "1. t & d 字音對比",
+            leftName: "t (無聲)",
+            rightName: "d (有聲)",
+            left: [
+                { word: "tab" },
+                { word: "ten" },
+                { word: "tin" },
+                { word: "tot" },
+                { word: "tub" }
+            ],
+            right: [
+                { word: "dab" },
+                { word: "den" },
+                { word: "din" },
+                { word: "dot" },
+                { word: "dub" }
+            ]
+        },
+        {
+            title: "2. c & g 字音對比",
+            leftName: "c (無聲)",
+            rightName: "g (有聲)",
+            left: [
+                { word: "cap" },
+                { word: "cep" },
+                { word: "cig" },
+                { word: "cot" },
+                { word: "cup" }
+            ],
+            right: [
+                { word: "gap" },
+                { word: "get" },
+                { word: "gig" },
+                { word: "got" },
+                { word: "gum" }
+            ]
+        },
+        {
+            title: "3. p & b 字音對比",
+            leftName: "p (無聲)",
+            rightName: "b (有聲)",
+            left: [
+                { word: "pad" },
+                { word: "pen" },
+                { word: "pig" },
+                { word: "pot" },
+                { word: "pub" }
+            ],
+            right: [
+                { word: "bad" },
+                { word: "ben" },
+                { word: "big" },
+                { word: "bot" },
+                { word: "bub" }
+            ]
+        },
+        {
+            title: "4. f & v 字音對比",
+            leftName: "f (無聲)",
+            rightName: "v (有聲)",
+            left: [
+                { word: "fan" },
+                { word: "fem" },
+                { word: "fit" },
+                { word: "fog" },
+                { word: "fun" }
+            ],
+            right: [
+                { word: "vac" },
+                { word: "vet" },
+                { word: "vim" },
+                { word: "vog" },
+                { word: "vug" }
+            ]
+        },
+        {
+            title: "5. s & z 字音對比",
+            leftName: "s (無聲)",
+            rightName: "z (有聲)",
+            left: [
+                { word: "sad" },
+                { word: "set" },
+                { word: "sip" },
+                { word: "sob" },
+                { word: "sun" }
+            ],
+            right: [
+                { word: "zap" },
+                { word: "zen" },
+                { word: "zip" },
+                { word: "zot" },
+                { word: "zug" }
+            ]
+        }
+    ];
+
+    const container = document.getElementById('content-container');
+
+    // 單字發音
+    function speakWord(word) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; 
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('您的瀏覽器不支援語音朗讀功能');
+        }
+    }
+
+    // 兩字獨立依序唸（保留舒適的停頓間隔）
+    function speakBoth(word1, word2) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utter1 = new SpeechSynthesisUtterance(word1);
+            utter1.lang = 'en-US';
+            utter1.rate = 0.85;
+
+            const utter2 = new SpeechSynthesisUtterance(word2);
+            utter2.lang = 'en-US';
+            utter2.rate = 0.85;
+
+            utter1.onend = () => {
+                setTimeout(() => {
+                    window.speechSynthesis.speak(utter2);
+                }, 200); // 這裡的 350 就是毫秒數（350毫秒 = 0.35秒
+            };
+
+            window.speechSynthesis.speak(utter1);
+        } else {
+            alert('您的瀏覽器不支援語音朗讀功能');
+        }
+    }
+
+    // 動態渲染
+    contrastData.forEach(group => {
+        const sectionTitle = document.createElement('div');
+        sectionTitle.className = 'section-title';
+        sectionTitle.innerText = group.title;
+        container.appendChild(sectionTitle);
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'header-row';
+        headerRow.innerHTML = `
+            <div>${group.leftName}</div>
+            <div>${group.rightName}</div>
+            <div>一起唸</div>
+        `;
+        container.appendChild(headerRow);
+
+        for (let i = 0; i < 5; i++) {
+            const leftItem = group.left[i];
+            const rightItem = group.right[i];
+
+            const row = document.createElement('div');
+            row.className = 'pair-row';
+
+            // 左側卡片
+            const leftCard = document.createElement('div');
+            leftCard.className = 'card';
+            leftCard.innerHTML = `
+                <span class="spelling">${leftItem.word}</span>
+            `;
+            leftCard.addEventListener('click', () => speakWord(leftItem.word));
+
+            // 右側卡片
+            const rightCard = document.createElement('div');
+            rightCard.className = 'card';
+            rightCard.innerHTML = `
+                <span class="spelling">${rightItem.word}</span>
+            `;
+            rightCard.addEventListener('click', () => speakWord(rightItem.word));
+
+            // 發音圖示按鈕
+            const btn = document.createElement('button');
+            btn.className = 'together-btn';
+            btn.title = "左右依序唸";
+            btn.innerHTML = `🔊`;
+            btn.addEventListener('click', () => speakBoth(leftItem.word, rightItem.word));
+
+            row.appendChild(leftCard);
+            row.appendChild(rightCard);
+            row.appendChild(btn);
+            container.appendChild(row);
+        }
+    });
+</script>
+
+</body>
+</html>
