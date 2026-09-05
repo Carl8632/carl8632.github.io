@@ -3,70 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CVC 短母音拼讀</title>
+    <title>短母音拼讀</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #333;
         }
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
         .container {
-            max-width: 900px;
+            /* 縮小容器最大寬度，讓整體方塊更集中、不拉長 */
+            max-width: 380px;
             margin: 0 auto;
+            padding: 0 10px;
         }
         .vowel-section {
-            margin-bottom: 35px;
+            margin-bottom: 25px;
         }
         .vowel-title {
-            font-size: 22px;
+            font-size: 16px;
             font-weight: bold;
             color: #2980b9;
-            border-left: 5px solid #3498db;
-            padding-left: 10px;
-            margin-bottom: 15px;
+            background: #eef9ff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
         }
         .card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 18px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: #fdfdfd;
+            border: 1.5px solid #e1e8ed;
+            border-radius: 6px;
+            padding: 8px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
-            border: 2px solid #e1e8ed;
+            transition: all 0.2s;
+            min-height: 36px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
         }
         .card:hover {
-            transform: translateY(-3px);
             background-color: #eef9ff;
             border-color: #3498db;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .word {
-            font-size: 28px;
+            font-size: 16px;
             font-weight: bold;
             color: #2c3e50;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         .back-link {
             display: block;
             text-align: center;
-            margin: 40px 0;
+            margin: 30px 0;
             color: #3498db;
             text-decoration: none;
             font-weight: bold;
+            font-size: 15px;
         }
         .back-link:hover {
             text-decoration: underline;
@@ -76,13 +85,12 @@
 <body>
 
 <div class="container">
-    <h1>CVC 短母音拼讀</h1>
+    <h1>短母音拼讀</h1>
     <div id="content-container"></div>
     <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
 </div>
 
 <script>
-    // 原始 CVC 單字清單
     const cvcGroups = [
         {
             vowel: "Short A",
@@ -108,7 +116,6 @@
 
     const container = document.getElementById('content-container');
 
-    // 瀏覽器語音發音函式
     function speakWord(word) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -121,16 +128,15 @@
         }
     }
 
-    // 處理單字：依首字母排序、去除重複首字母、過濾無效單字
     cvcGroups.forEach(group => {
         const seenInitials = new Set();
         const filteredAndSortedWords = group.words
-            .filter(w => w && w.length >= 2) // 確保單字有效
-            .sort((a, b) => a[0].localeCompare(b[0])) // 依第一個子音字母排序 (b -> z)
+            .filter(w => w && w.length >= 2)
+            .sort((a, b) => a[0].localeCompare(b[0]))
             .filter(w => {
                 const initial = w[0].toLowerCase();
                 if (seenInitials.has(initial)) {
-                    return false; // 如果第一個子音已經出現過，則刪除
+                    return false;
                 }
                 seenInitials.add(initial);
                 return true;
@@ -139,7 +145,6 @@
         group.words = filteredAndSortedWords;
     });
 
-    // 動態渲染五個母音區塊與單字卡片
     cvcGroups.forEach(group => {
         const section = document.createElement('div');
         section.className = 'vowel-section';
