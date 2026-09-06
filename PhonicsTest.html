@@ -313,29 +313,83 @@
         });
     }
 
-    const gamePool = [
-        { display: "cat", sound: "cat" }, { display: "bat", sound: "bat" }, { display: "hat", sound: "hat" },
-        { display: "pan", sound: "pan" }, { display: "can", sound: "can" }, { display: "map", sound: "map" },
-        { display: "bed", sound: "bed" }, { display: "red", sound: "red" }, { display: "pen", sound: "pen" },
-        { display: "big", sound: "big" }, { display: "pig", sound: "pig" }, { display: "bin", sound: "bin" },
-        { display: "dog", sound: "dog" }, { display: "pot", sound: "pot" }, { display: "box", sound: "box" },
-        { display: "bug", sound: "bug" }, { display: "run", sound: "run" }, { display: "cup", sound: "cup" },
-        
-        { display: "gate", sound: "gate" }, { display: "day", sound: "day" }, { display: "rain", sound: "rain" },
-        { display: "green", sound: "green" }, { display: "tree", sound: "tree" }, { display: "peach", sound: "peach" },
-        { display: "bite", sound: "bite" }, { display: "pie", sound: "pie" }, { display: "light", sound: "light" },
-        { display: "boat", sound: "boat" }, { display: "snow", sound: "snow" }, { display: "hole", sound: "hole" },
-        { display: "blue", sound: "blue" }, { display: "cute", sound: "cute" }, { display: "fruit", sound: "fruit" },
+    // 原始字庫分類
+    const rawGamePool = [
+        // 1. CVC 短母音系列
+        {
+            vowel: "Short A",
+            words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"]
+        },
+        {
+            vowel: "Short E",
+            words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"]
+        },
+        {
+            vowel: "Short I",
+            words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"]
+        },
+        {
+            vowel: "Short O",
+            words: ["dog", "log", "jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"]
+        },
+        {
+            vowel: "Short U",
+            words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"]
+        },
 
-        { display: "shirt", sound: "shirt" }, { display: "fish", sound: "fish" },
-        { display: "chips", sound: "chips" }, { display: "cheese", sound: "cheese" },
-        { display: "three", sound: "three" }, { display: "teeth", sound: "teeth" },
-        { display: "white", sound: "white" }, { display: "wheel", sound: "wheel" },
-        { display: "photo", sound: "photo" }, { display: "phone", sound: "phone" },
-        { display: "black", sound: "black" }, { display: "blue", sound: "blue" },
-        { display: "plane", sound: "plane" }, { display: "plant", sound: "plant" },
-        { display: "star", sound: "star" }, { display: "stop", sound: "stop" }
+        // 2. 長母音系列 (LONG A, E, I, O, U)
+        {
+            vowel: "Long A",
+            words: ["gate", "pail", "day", "wave", "rain", "play"]
+        },
+        {
+            vowel: "Long E",
+            words: ["Eve", "peach", "green", "these", "tea", "tree"]
+        },
+        {
+            vowel: "Long I",
+            words: ["bite", "pie", "light", "rice", "tie", "night"]
+        },
+        {
+            vowel: "Long O",
+            words: ["hole", "boat", "snow", "mole", "goat", "yellow"]
+        },
+        {
+            vowel: "Long U",
+            words: ["cute", "blue", "fruit", "few", "tube", "glue", "suit", "draw"]
+        },
+
+        // 3. 子音組系列 (Consonant Blends & Digraphs)
+        { vowel: "th (無聲)", words: ["three", "teeth", "mouth"] },
+        { vowel: "th (有聲)", words: ["this", "father", "mother"] },
+        { vowel: "wh", words: ["white", "wheel", "whale"] },
+        { vowel: "ph", words: ["photo", "phone", "dolphin"] },
+        { vowel: "sh", words: ["shirt", "fish", "wash"] },
+        { vowel: "ch", words: ["chips", "cheese", "lunch"] },
+        { vowel: "ng", words: ["sing", "king", "song"] },
+        { vowel: "nk", words: ["sink", "pink", "rink"] },
+        { vowel: "bl", words: ["black", "block", "blue"] },
+        { vowel: "pl", words: ["plane", "plant", "plum"] },
+        { vowel: "gl", words: ["glad", "glass", "glue"] },
+        { vowel: "cl", words: ["clay", "clean", "clap"] },
+        { vowel: "br", words: ["bread", "brown", "brick"] },
+        { vowel: "pr", words: ["prince", "prize", "print"] },
+        { vowel: "gr", words: ["grapes", "grass", "green"] },
+        { vowel: "cr", words: ["crab", "crush", "cry"] },
+        { vowel: "tr", words: ["train", "tree", "truck"] },
+        { vowel: "dr", words: ["dragonfly", "draw", "drum"] },
+        { vowel: "sp", words: ["spoon", "spy", "spot"] },
+        { vowel: "st", words: ["star", "storm", "stop"] },
+        { vowel: "sk", words: ["ski", "sky", "skin"] }
     ];
+
+    // 展開成扁平化的遊戲選單 { display, sound }
+    let gamePool = [];
+    rawGamePool.forEach(group => {
+        group.words.forEach(w => {
+            gamePool.push({ display: w, sound: w });
+        });
+    });
 
     const boardElement = document.getElementById('board');
 
