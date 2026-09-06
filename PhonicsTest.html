@@ -148,12 +148,6 @@
         .action-btn.restart:hover {
             background: #c0392b;
         }
-        .action-btn.mic {
-            background: #9b59b6;
-        }
-        .action-btn.mic:hover {
-            background: #8e44ad;
-        }
         .game-over-overlay {
             position: absolute;
             top: 0;
@@ -211,14 +205,13 @@
 
 <div class="control-panel">
     <div class="prompt-box">
-        <span class="prompt-text" id="promptText">點擊下方按鈕開始遊戲<br>聽語音提示或開麥克風唸出單字消除！</span>
+        <span class="prompt-text" id="promptText">點擊下方按鈕開始遊戲<br>聽語音提示並點擊對應單字消除！</span>
         <button class="sound-btn" onclick="playTargetSound()">🔊 重播聲音</button>
     </div>
     <div class="btn-row">
         <button class="action-btn" id="startBtn" onclick="startGame()">開始遊戲</button>
         <button class="action-btn pause" id="pauseBtn" onclick="togglePause()" disabled>暫停</button>
         <button class="action-btn restart" id="restartBtn" onclick="restartGame()" disabled>重來</button>
-        <button class="action-btn mic" id="micBtn" onclick="toggleSpeechRecognition()" disabled>🎙️ 關閉</button>
     </div>
 </div>
 
@@ -238,8 +231,6 @@
     let zeroScoreWrongCount = 0;
 
     let audioCtx = null;
-    let recognition = null;
-    let isMicActive = false;
 
     function initAudio() {
         if (!audioCtx) {
@@ -322,97 +313,6 @@
         });
     }
 
-    function initSpeechRecognition() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("您的瀏覽器不支援語音辨識功能（建議使用 Google Chrome）");
-            return;
-        }
-
-        recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.continuous = true;
-        recognition.interimResults = false;
-
-        recognition.onresult = (event) => {
-            let transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-            transcript = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
-            
-            if (currentTarget && transcript.includes(currentTarget.sound)) {
-                triggerMatchByVoice();
-            }
-        };
-
-        recognition.onerror = (event) => {
-            console.log("語音辨識錯誤: ", event.error);
-        };
-
-        recognition.onend = () => {
-            if (isMicActive && gameRunning && !isPaused) {
-                try {
-                    recognition.start();
-                } catch (e) {}
-            }
-        };
-    }
-
-    function toggleSpeechRecognition() {
-        if (!recognition) initSpeechRecognition();
-        if (!recognition) return;
-
-        isMicActive = !isMicActive;
-        const micBtn = document.getElementById('micBtn');
-
-        if (isMicActive) {
-            try {
-                recognition.start();
-                micBtn.style.background = '#8e44ad';
-                micBtn.innerText = '🎙️ 開啟';
-            } catch (e) {
-                isMicActive = false;
-            }
-        } else {
-            recognition.stop();
-            micBtn.style.background = '#9b59b6';
-            micBtn.innerText = '🎙️ 關閉';
-        }
-    }
-
-    function triggerMatchByVoice() {
-        if (!gameRunning || isPaused || !currentTarget) return;
-
-        let matchCount = 0;
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                if (boardData[row][col] !== null && boardData[row][col].sound === currentTarget.sound) {
-                    boardData[row][col] = null;
-                    matchCount++;
-                    const matchDiv = document.querySelector(`[data-row='${row}'][data-col='${col}']`);
-                    if (matchDiv) matchDiv.classList.add('correct-anim');
-                }
-            }
-        }
-
-        if (matchCount > 0) {
-            zeroScoreWrongCount = 0;
-            playPopSound();
-            score += matchCount * 10;
-            document.getElementById('score').innerText = score;
-
-            if (score >= 60 && score % 60 === 0 && dropSpeed > 1000) {
-                dropSpeed -= 200;
-                clearInterval(gameInterval);
-                gameInterval = setInterval(gameLoop, dropSpeed);
-            }
-
-            setTimeout(() => {
-                applyStackedGravity();
-                renderBoard();
-                pickNewQuestion();
-            }, 200);
-        }
-    }
-
     const gamePool = [
         { display: "cat", sound: "cat" }, { display: "bat", sound: "bat" }, { display: "hat", sound: "hat" },
         { display: "pan", sound: "pan" }, { display: "can", sound: "can" }, { display: "map", sound: "map" },
@@ -468,7 +368,6 @@
         document.getElementById('pauseBtn').disabled = false;
         document.getElementById('pauseBtn').innerText = '暫停';
         document.getElementById('restartBtn').disabled = false;
-        document.getElementById('micBtn').disabled = false;
         
         score = 0;
         emptyBoardSpawnRemaining = 2;
@@ -497,21 +396,16 @@
             pauseBtn.innerText = '繼續';
             document.getElementById('promptText').innerHTML = `遊戲已暫停，請思考...`;
             if (window.speechSynthesis) window.speechSynthesis.cancel();
-            if (isMicActive && recognition) recognition.stop();
         } else {
             pauseBtn.innerText = '暫停';
             if (currentTarget) {
-                document.getElementById('promptText').innerHTML = `請聽聲音或唸出: <b style="color:#2980b9;">${currentTarget.display}</b>`;
-            }
-            if (isMicActive && recognition) {
-                try { recognition.start(); } catch(e) {}
+                document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9;">${currentTarget.display}</b>`;
             }
         }
     }
 
     function restartGame() {
         if (window.speechSynthesis) window.speechSynthesis.cancel();
-        if (isMicActive && recognition) recognition.stop();
         if (gameInterval) clearInterval(gameInterval);
         startGame();
     }
@@ -640,7 +534,7 @@
                     sound: chosen.sound
                 };
                 if (!isPaused) {
-                    document.getElementById('promptText').innerHTML = `請聽聲音或唸出: <b style="color:#2980b9;">${currentTarget.display}</b>`;
+                    document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9;">${currentTarget.display}</b>`;
                     playTargetSound();
                 }
             }
@@ -751,9 +645,6 @@
     function gameOver(reason = 'stack') {
         gameRunning = false;
         isPaused = false;
-        if (isMicActive && recognition) {
-            recognition.stop();
-        }
         clearInterval(gameInterval);
         if (window.speechSynthesis) window.speechSynthesis.cancel();
         
@@ -771,7 +662,6 @@
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
         document.getElementById('restartBtn').disabled = true;
-        document.getElementById('micBtn').disabled = true;
     }
 
     initBoardDOM();
