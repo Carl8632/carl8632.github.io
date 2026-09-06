@@ -46,13 +46,13 @@
             background: #fdfdfd;
             border: 1.5px solid #e1e8ed;
             border-radius: 6px;
-            padding: 8px 4px;
+            padding: 12px 4px; /* 調整 padding 配合長短母音的方塊高度 */
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             transition: all 0.2s;
-            min-height: 36px;
+            min-height: 45px; /* 改為與長短母音相同的最小高度 */
             text-align: center;
             width: 100%;
             box-sizing: border-box;
@@ -62,7 +62,8 @@
             border-color: #3498db;
         }
         .word {
-            font-size: 16px;
+            font-family: Arial, sans-serif; /* 改為 Arial 字體 */
+            font-size: 21px; /* 放大字體大小與長短母音一致 */
             font-weight: bold;
             color: #2c3e50;
             letter-spacing: 0.5px;
