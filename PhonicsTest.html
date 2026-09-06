@@ -167,7 +167,9 @@
         .game-over-overlay h2 {
             margin: 0 0 10px 0;
             color: #e74c3c;
-            font-size: 26px;
+            font-size: 24px;
+            text-align: center;
+            padding: 0 10px;
         }
         .game-over-overlay p {
             margin: 0 0 20px 0;
@@ -194,7 +196,7 @@
 <div class="game-container">
     <div class="grid-board" id="board"></div>
     <div class="game-over-overlay" id="gameOverOverlay">
-        <h2>遊戲結束</h2>
+        <h2 id="gameOverTitle">遊戲結束</h2>
         <p>最終得分: <span id="finalScore">0</span></p>
         <button class="sound-btn" onclick="startGame()">再玩一次</button>
     </div>
@@ -224,7 +226,8 @@
     let isPaused = false;
     let currentTarget = null; 
     let dropSpeed = 2200;
-    let spawnCountTracker = 0;
+    let emptyBoardSpawnRemaining = 0; // 記錄清空後還要連續幾次出現 3 個方塊
+    let zeroScoreWrongCount = 0;
 
     let audioCtx = null;
 
@@ -284,6 +287,31 @@
         osc.stop(now + 0.2);
     }
 
+    function playHomeworkSound() {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const tones = [300, 250, 200, 150];
+
+        tones.forEach((freq, index) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + index * 0.12);
+
+            gain.gain.setValueAtTime(0.2, now + index * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.12 + 0.15);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + index * 0.12);
+            osc.stop(now + index * 0.12 + 0.15);
+        });
+    }
+
     const gamePool = [
         { display: "cat", sound: "cat" }, { display: "bat", sound: "bat" }, { display: "hat", sound: "hat" },
         { display: "pan", sound: "pan" }, { display: "can", sound: "can" }, { display: "map", sound: "map" },
@@ -341,7 +369,8 @@
         document.getElementById('restartBtn').disabled = false;
         
         score = 0;
-        spawnCountTracker = 0;
+        emptyBoardSpawnRemaining = 2; // 遊戲剛開始時也算清空狀態，預設連續 2 次 3 個方塊
+        zeroScoreWrongCount = 0;
         document.getElementById('score').innerText = score;
         dropSpeed = 2200;
         gameRunning = true;
@@ -385,7 +414,7 @@
 
         for (let c = 0; c < cols; c++) {
             if (boardData[0][c] !== null && boardData[0][c].state === 'stacked') {
-                gameOver();
+                gameOver('stack');
                 return;
             }
         }
@@ -406,7 +435,7 @@
         for (let c = 0; c < cols; c++) {
             if (boardData[0][c] !== null && boardData[0][c].state === 'stacked') {
                 renderBoard();
-                gameOver();
+                gameOver('stack');
                 return;
             }
         }
@@ -424,30 +453,37 @@
             if (boardData[0][c] !== null) return;
         }
 
-        spawnCountTracker++;
-
-        // 檢查盤面上是否有任何已經著陸堆疊 (stacked) 的方塊
-        let hasStackedBlocks = false;
+        // 計算目前畫面上總共有多少個方塊
+        let totalBlocksOnBoard = 0;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                if (boardData[r][c] !== null && boardData[r][c].state === 'stacked') {
-                    hasStackedBlocks = true;
-                    break;
+                if (boardData[r][c] !== null) {
+                    totalBlocksOnBoard++;
                 }
             }
-            if (hasStackedBlocks) break;
         }
 
-        let count;
-        if (spawnCountTracker <= 2) {
-            // 1. 遊戲前兩次強制 3 個方塊
+        // 如果畫面方塊剛好被完全消光（變成 0 個），設定接下來連續 2 次要出現 3 個方塊
+        if (totalBlocksOnBoard === 0) {
+            emptyBoardSpawnRemaining = 2;
+        }
+
+        let count = 1;
+        if (emptyBoardSpawnRemaining > 0) {
             count = 3;
-        } else if (hasStackedBlocks) {
-            // 2. 只要已有方塊著陸堆疊，就強制一次只掉落 1 個方塊，提供喘息空間
-            count = 1;
+            emptyBoardSpawnRemaining--; // 每出一列就扣 1 次，確保精準連續 2 次
         } else {
-            // 3. 否則維持原本隨機 1 或 2 個方塊
-            count = Math.random() < 0.65 ? 1 : 2;
+            let hasStackedBlocks = false;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (boardData[r][c] !== null && boardData[r][c].state === 'stacked') {
+                        hasStackedBlocks = true;
+                        break;
+                    }
+                }
+                if (hasStackedBlocks) break;
+            }
+            count = hasStackedBlocks ? 1 : (Math.random() < 0.65 ? 1 : 2);
         }
 
         let shuffledCols = [0, 1, 2].sort(() => 0.5 - Math.random());
@@ -526,6 +562,7 @@
         const cellDiv = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
 
         if (item.sound === currentTarget.sound) {
+            zeroScoreWrongCount = 0;
             let matchCount = 0;
 
             for (let row = 0; row < rows; row++) {
@@ -561,6 +598,13 @@
             document.getElementById('score').innerText = score;
             cellDiv.classList.add('wrong-anim');
             setTimeout(() => renderBoard(), 200);
+
+            if (score === 0) {
+                zeroScoreWrongCount++;
+                if (zeroScoreWrongCount >= 3) {
+                    gameOver('homework');
+                }
+            }
         }
     }
 
@@ -585,11 +629,20 @@
         });
     }
 
-    function gameOver() {
+    function gameOver(reason = 'stack') {
         gameRunning = false;
         isPaused = false;
         clearInterval(gameInterval);
         if (window.speechSynthesis) window.speechSynthesis.cancel();
+        
+        const titleElem = document.getElementById('gameOverTitle');
+        if (reason === 'homework') {
+            titleElem.innerText = "恭喜你要寫作業了！";
+            playHomeworkSound();
+        } else {
+            titleElem.innerText = "遊戲結束";
+        }
+
         document.getElementById('finalScore').innerText = score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
         document.getElementById('startBtn').innerText = '開始遊戲';
