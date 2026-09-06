@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英語拼讀俄羅斯方塊</title>
+    <title>拼讀疊疊樂</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,7 +46,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 18px; /調整字體大小以適應方塊
+            font-size: 18px; 
+            font-family: Arial, sans-serif;
             font-weight: bold;
             color: #fff;
             user-select: none;
@@ -226,7 +227,7 @@
     let isPaused = false;
     let currentTarget = null; 
     let dropSpeed = 2200;
-    let emptyBoardSpawnRemaining = 0; // 記錄清空後還要連續幾次出現 3 個方塊
+    let emptyBoardSpawnRemaining = 0;
     let zeroScoreWrongCount = 0;
 
     let audioCtx = null;
@@ -369,7 +370,7 @@
         document.getElementById('restartBtn').disabled = false;
         
         score = 0;
-        emptyBoardSpawnRemaining = 2; // 遊戲剛開始時也算清空狀態，預設連續 2 次 3 個方塊
+        emptyBoardSpawnRemaining = 2;
         zeroScoreWrongCount = 0;
         document.getElementById('score').innerText = score;
         dropSpeed = 2200;
@@ -442,10 +443,7 @@
 
         spawnRow();
         renderBoard();
-
-        if (!currentTarget) {
-            pickNewQuestion();
-        }
+        pickNewQuestion();
     }
 
     function spawnRow() {
@@ -453,7 +451,6 @@
             if (boardData[0][c] !== null) return;
         }
 
-        // 計算目前畫面上總共有多少個方塊
         let totalBlocksOnBoard = 0;
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
@@ -463,7 +460,6 @@
             }
         }
 
-        // 如果畫面方塊剛好被完全消光（變成 0 個），設定接下來連續 2 次要出現 3 個方塊
         if (totalBlocksOnBoard === 0) {
             emptyBoardSpawnRemaining = 2;
         }
@@ -471,7 +467,7 @@
         let count = 1;
         if (emptyBoardSpawnRemaining > 0) {
             count = 3;
-            emptyBoardSpawnRemaining--; // 每出一列就扣 1 次，確保精準連續 2 次
+            emptyBoardSpawnRemaining--;
         } else {
             let hasStackedBlocks = false;
             for (let r = 0; r < rows; r++) {
@@ -503,28 +499,51 @@
     function pickNewQuestion() {
         if (!gameRunning) return;
 
+        // 收集所有已堆疊（stacked）的方塊
+        let stackedItems = [];
+        // 收集所有在盤面上的方塊（包含 active 與 stacked）作為備用候選
         let allItems = [];
+
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 if (boardData[r][c] !== null) {
                     allItems.push(boardData[r][c]);
+                    if (boardData[r][c].state === 'stacked') {
+                        stackedItems.push(boardData[r][c]);
+                    }
                 }
             }
         }
 
-        if (allItems.length > 0) {
-            let chosen = allItems[Math.floor(Math.random() * allItems.length)];
-            currentTarget = {
-                display: chosen.display,
-                sound: chosen.sound
-            };
-            if (!isPaused) {
-                document.getElementById('promptText').innerHTML = `請聽聲音點選: <b style="color:#2980b9;">${currentTarget.display}</b>`;
-                playTargetSound();
+        // 如果盤面上已經有任何方塊，檢查目前題目是否還存在於盤面上
+        let currentTargetStillOnBoard = false;
+        if (currentTarget) {
+            currentTargetStillOnBoard = allItems.some(item => item.sound === currentTarget.sound);
+        }
+
+        // 如果目前沒有題目，或原本的題目已經消失，需要換新題目
+        if (!currentTarget || !currentTargetStillOnBoard) {
+            let candidatePool = [];
+
+            // 核心規則：只要有堆疊方塊，就只能從堆疊方塊中出題！
+            if (stackedItems.length > 0) {
+                candidatePool = stackedItems;
+            } else {
+                // 如果下方還沒有任何堆疊方塊，則從盤面上所有方塊（active）中出題，確保隨時有題目可玩
+                candidatePool = allItems;
             }
-        } else {
-            currentTarget = null;
-            document.getElementById('promptText').innerHTML = `等待新方塊落下...`;
+
+            if (candidatePool.length > 0) {
+                let chosen = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+                currentTarget = {
+                    display: chosen.display,
+                    sound: chosen.sound
+                };
+                if (!isPaused) {
+                    document.getElementById('promptText').innerHTML = `請聽聲音點選: <b style="color:#2980b9;">${currentTarget.display}</b>`;
+                    playTargetSound();
+                }
+            }
         }
     }
 
