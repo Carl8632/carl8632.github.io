@@ -15,7 +15,7 @@
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 24px;
         }
         .container {
@@ -23,12 +23,25 @@
             margin: 0 auto;
             padding: 0 10px;
         }
+        /* 小標題樣式 */
+        .section-title {
+            display: inline-block;
+            background-color: #e1f0fd;
+            color: #2980b9;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            margin-top: 15px;
+            letter-spacing: 0.5px;
+        }
         .header-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 55px;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 6px;
-            padding: 18px 5px 8px 5px;
-            font-size: 21px;
+            padding: 8px 5px 6px 5px;
+            font-size: 18px;
             font-weight: bold;
             color: #e67e22;
             text-align: center;
@@ -40,8 +53,7 @@
         }
         .group-row {
             display: grid;
-            /* 將手機或電腦版欄位統一設為 1fr，確保每一欄等寬 */
-            grid-template-columns: 1fr 1fr 1fr 55px;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 6px;
             align-items: center;
             margin-bottom: 8px;
@@ -52,30 +64,29 @@
         }
         /* 針對 U 有 4 個欄位的特例處理 */
         .header-row.four-cols, .group-row.four-cols {
-            grid-template-columns: 1fr 1fr 1fr 1fr 55px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
         }
         @media (max-width: 480px) {
             .group-row, .group-row.four-cols {
-                /* 手機版統一欄位均分，不再壓縮第三欄 */
-                grid-template-columns: 1fr 1fr 1fr 45px;
+                grid-template-columns: 1fr 1fr 1fr;
                 gap: 5px;
                 padding: 6px 6px;
             }
             .group-row.four-cols {
-                grid-template-columns: 1fr 1fr 1fr 1fr 40px;
+                grid-template-columns: 1fr 1fr 1fr 1fr;
             }
         }
         .card {
             background: #fdfdfd;
             border: 1.5px solid #e1e8ed;
             border-radius: 6px;
-            padding: 10px 4px;
+            padding: 12px 4px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             transition: all 0.2s;
-            min-height: 40px;
+            min-height: 45px;
             text-align: center;
             width: 100%;
             box-sizing: border-box;
@@ -85,27 +96,10 @@
             border-color: #3498db;
         }
         .spelling {
-            font-size: 17px; /* 手機上微調字體，避免單字太長被擠壓 */
+            font-size: 21px; /* 放大方塊內單字字體 */
             font-weight: bold;
             color: #2c3e50;
             letter-spacing: 0.5px;
-        }
-        .together-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            height: 100%;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .together-btn:hover {
-            background-color: #2980b9;
         }
         .back-link {
             display: block;
@@ -132,6 +126,7 @@
 <script>
     const longVowelData = [
         {
+            title: "LONG A",
             columns: ["a_e", "ai", "ay"],
             rows: [
                 [{word: "gate"}, {word: "pail"}, {word: "day"}],
@@ -139,6 +134,7 @@
             ]
         },
         {
+            title: "LONG E",
             columns: ["e_e", "ea", "ee"],
             rows: [
                 [{word: "Eve"}, {word: "peach"}, {word: "green"}],
@@ -146,6 +142,7 @@
             ]
         },
         {
+            title: "LONG I",
             columns: ["i_e", "ie", "igh"],
             rows: [
                 [{word: "bite"}, {word: "pie"}, {word: "light"}],
@@ -153,6 +150,7 @@
             ]
         },
         {
+            title: "LONG O",
             columns: ["o_e", "oa", "ow"],
             rows: [
                 [{word: "hole"}, {word: "boat"}, {word: "snow"}],
@@ -160,6 +158,7 @@
             ]
         },
         {
+            title: "LONG U",
             columns: ["u_e", "ue", "ui", "ew"],
             rows: [
                 [{word: "cute"}, {word: "blue"}, {word: "fruit"}, {word: "few"}],
@@ -183,33 +182,15 @@
         }
     }
 
-    // 整列依序唸
-    function speakRow(words) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            
-            let index = 0;
-            function playNext() {
-                if (index < words.length) {
-                    const utterance = new SpeechSynthesisUtterance(words[index]);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 0.85;
-                    utterance.onend = () => {
-                        index++;
-                        setTimeout(playNext, 350);
-                    };
-                    window.speechSynthesis.speak(utterance);
-                }
-            }
-            playNext();
-        } else {
-            alert('您的瀏覽器不支援語音朗讀功能');
-        }
-    }
-
     // 動態渲染網頁內容
     longVowelData.forEach(group => {
         const isFour = group.columns.length === 4;
+
+        // 建立小標題
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'section-title';
+        titleDiv.innerText = group.title;
+        container.appendChild(titleDiv);
 
         // 表頭
         const headerRow = document.createElement('div');
@@ -218,7 +199,6 @@
         group.columns.forEach(col => {
             headerHtml += `<div>${col}</div>`;
         });
-        headerHtml += `<div style="color: #34495e; font-size: 15px;">一起唸</div>`;
         headerRow.innerHTML = headerHtml;
         container.appendChild(headerRow);
 
@@ -237,15 +217,6 @@
                 row.appendChild(card);
             });
 
-            // 該列的一起唸按鈕
-            const btn = document.createElement('button');
-            btn.className = 'together-btn';
-            btn.title = "一起唸";
-            btn.innerHTML = `🔊`;
-            const rowWordList = rowItems.map(i => i.word);
-            btn.addEventListener('click', () => speakRow(rowWordList));
-
-            row.appendChild(btn);
             container.appendChild(row);
         });
     });
