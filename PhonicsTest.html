@@ -648,8 +648,8 @@
             score += matchCount * 10;
             document.getElementById('score').innerText = score;
 
-            if (score >= 60 && score % 60 === 0 && dropSpeed > 1000) {
-                dropSpeed -= 200;
+            if (score >= 100 && score % 100 === 0 && dropSpeed > 1000) { // 每增加100分，下降速度加快
+                dropSpeed -= 100;
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, dropSpeed);
             }
