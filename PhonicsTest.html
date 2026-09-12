@@ -95,7 +95,7 @@
             align-items: center;
         }
         .prompt-text {
-            font-size: 13px;
+            font-size: 16px;
             color: #2c3e50;
             font-weight: bold;
             text-align: left;
@@ -109,7 +109,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 16px;
             transition: background 0.2s;
             white-space: nowrap;
         }
@@ -128,7 +128,7 @@
             border: none;
             padding: 9px 4px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
@@ -205,11 +205,11 @@
 
 <div class="control-panel">
     <div class="prompt-box">
-        <span class="prompt-text" id="promptText">點擊下方按鈕開始遊戲<br>聽語音提示並點擊對應單字消除！</span>
-        <button class="sound-btn" onclick="playTargetSound()">🔊 重播聲音</button>
+        <span class="prompt-text" id="promptText">聽語音提示並點擊單字消除！</span>
+        <button class="sound-btn" onclick="playTargetSound()">🔊 重播</button>
     </div>
     <div class="btn-row">
-        <button class="action-btn" id="startBtn" onclick="startGame()">開始遊戲</button>
+        <button class="action-btn" id="startBtn" onclick="startGame()">開始</button>
         <button class="action-btn pause" id="pauseBtn" onclick="togglePause()" disabled>暫停</button>
         <button class="action-btn restart" id="restartBtn" onclick="restartGame()" disabled>重來</button>
     </div>
@@ -453,7 +453,7 @@
         } else {
             pauseBtn.innerText = '暫停';
             if (currentTarget) {
-                document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9;">${currentTarget.display}</b>`;
+                document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9; font-size: 20px;">${currentTarget.display}</b>`;
             }
         }
     }
@@ -588,7 +588,7 @@
                     sound: chosen.sound
                 };
                 if (!isPaused) {
-                    document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9;">${currentTarget.display}</b>`;
+                    document.getElementById('promptText').innerHTML = `請聽聲音並點擊: <b style="color:#2980b9; font-size: 20px;">${currentTarget.display}</b>`;
                     playTargetSound();
                 }
             }
