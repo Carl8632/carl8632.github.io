@@ -298,28 +298,56 @@
         e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
     });
 
-    // 提交成績到 Supabase
-    async function submitPlayerScore() {
-        const name = nameInput.value.trim();
-        const currentFinalScore = parseInt(document.getElementById('finalScore').innerText);
+// 【新增】用來查詢目前分數排在第幾名的函式
+async function getPlayerRank(currentScore) {
+    const { count, error } = await supabaseClient
+        .from('leaderboard')
+        .select('*', { count: 'exact', head: true })
+        .gt('score', currentScore); // .gt 代表 greater than (大於)
 
-        if (!name) {
-            alert('請輸入英文或數字暱稱！');
-            return;
-        }
-
-        const { error } = await supabaseClient
-            .from('leaderboard')
-            .insert([{ name: name, score: currentFinalScore }]);
-
-        if (error) {
-            console.error('上傳成績失敗:', error);
-            alert('上傳失敗，請稍後再試');
-        } else {
-            document.getElementById('submitBox').style.display = 'none'; // 送出後隱藏輸入框
-            fetchLeaderboard(); // 重新抓取最新排行榜
-        }
+    if (error) {
+        console.error('查詢名次失敗', error);
+        return null;
     }
+
+    // 比你高分的人數 + 1，就是你的名次
+    const myRank = count + 1;
+    return myRank;
+}
+
+// 提交成績到 Supabase（已修改：加入名次查詢與提示）
+async function submitPlayerScore() {
+    const name = nameInput.value.trim();
+    const currentFinalScore = parseInt(document.getElementById('finalScore').innerText);
+
+    if (!name) {
+        alert('請輸入英文或數字暱稱！');
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from('leaderboard')
+        .insert([{ name: name, score: currentFinalScore }]);
+
+    if (error) {
+        console.error('上傳成績失敗:', error);
+        alert('上傳失敗，請稍後再試');
+    } else {
+        document.getElementById('submitBox').style.display = 'none'; // 送出後隱藏輸入框
+        
+        // 查詢名次並彈出提示
+        const rank = await getPlayerRank(currentFinalScore);
+        if (rank !== null) {
+            if (rank <= 10) {
+                alert(`恭喜你！進入英雄榜第 ${rank} 名！`);
+            } else {
+                alert(`成績已送出！你的得分是 ${currentFinalScore} 分，目前排名第 ${rank} 名，再接再厲！`);
+            }
+        }
+
+        fetchLeaderboard(); // 重新抓取最新排行榜
+    }
+}
 
     // 從 Supabase 抓取前 10 名排行榜
     async function fetchLeaderboard() {
