@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>拼讀疊疊樂</title>
+    <!-- 引入 Supabase JS 客戶端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,7 +48,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px; /方塊文字大小在這裡改
+            font-size: 20px;
             font-family: Arial, sans-serif;
             font-weight: bold;
             color: #fff;
@@ -154,27 +156,77 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.88);
+            background: rgba(0, 0, 0, 0.92);
             backdrop-filter: blur(4px);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             color: white;
             display: none;
             z-index: 10;
+            padding: 15px 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
         }
         .game-over-overlay h2 {
-            margin: 0 0 10px 0;
+            margin: 0 0 5px 0;
             color: #e74c3c;
-            font-size: 24px;
+            font-size: 20px;
             text-align: center;
-            padding: 0 10px;
         }
         .game-over-overlay p {
-            margin: 0 0 20px 0;
-            font-size: 16px;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        /* 排行榜與輸入表單樣式 */
+        .submit-score-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 260px;
+            margin-bottom: 10px;
+        }
+        .submit-score-box input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+        }
+        .leaderboard-container {
+            width: 100%;
+            max-width: 280px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .leaderboard-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #f1c40f;
+            text-align: center;
+        }
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaderboard-item:last-child {
+            border-bottom: none;
         }
         .back-link {
             display: block;
@@ -199,6 +251,21 @@
     <div class="game-over-overlay" id="gameOverOverlay">
         <h2 id="gameOverTitle">遊戲結束</h2>
         <p>最終得分: <span id="finalScore">0</span></p>
+        
+        <!-- 英文/數字暱稱輸入區 -->
+        <div class="submit-score-box" id="submitBox">
+            <input type="text" id="playerName" placeholder="請輸入英文或數字暱稱" maxlength="12">
+            <button class="sound-btn" onclick="submitPlayerScore()">送出成績</button>
+        </div>
+
+        <!-- 排行榜顯示區 -->
+        <div class="leaderboard-container">
+            <div class="leaderboard-title">🏆 英雄榜 Top 10</div>
+            <ul class="leaderboard-list" id="leaderboardList">
+                <li class="leaderboard-item"><span>載入中...</span><span></span></li>
+            </ul>
+        </div>
+
         <button class="sound-btn" onclick="startGame()">再玩一次</button>
     </div>
 </div>
@@ -218,6 +285,83 @@
 <a href="index.html" class="back-link">← 返回英語學習網站首頁</a>
 
 <script>
+    // ==========================================
+    // Supabase 設定 (請填入你的專案資訊)
+    // ==========================================
+    const SUPABASE_URL = 'https://zeqemounpcjbhbksftoa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplcWVtb3VucGNqYmhia3NmdG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NTI2NjIsImV4cCI6MjA4NzMyODY2Mn0.WAWfdmTygPQK3zJAeVO79pHKP7umHnFcouyykvT_x74';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 限制輸入框只能輸入英文與數字，自動過濾中文與特殊符號
+    const nameInput = document.getElementById('playerName');
+    nameInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+    });
+
+    // 提交成績到 Supabase
+    async function submitPlayerScore() {
+        const name = nameInput.value.trim();
+        const currentFinalScore = parseInt(document.getElementById('finalScore').innerText);
+
+        if (!name) {
+            alert('請輸入英文或數字暱稱！');
+            return;
+        }
+
+        const { error } = await supabaseClient
+            .from('leaderboard')
+            .insert([{ name: name, score: currentFinalScore }]);
+
+        if (error) {
+            console.error('上傳成績失敗:', error);
+            alert('上傳失敗，請稍後再試');
+        } else {
+            document.getElementById('submitBox').style.display = 'none'; // 送出後隱藏輸入框
+            fetchLeaderboard(); // 重新抓取最新排行榜
+        }
+    }
+
+    // 從 Supabase 抓取前 10 名排行榜
+    async function fetchLeaderboard() {
+        const listElem = document.getElementById('leaderboardList');
+        listElem.innerHTML = '<li class="leaderboard-item"><span>載入中...</span><span></span></li>';
+
+        const { data, error } = await supabaseClient
+            .from('leaderboard')
+            .select('*')
+            .order('score', { ascending: false })
+            .limit(10);
+
+        if (error) {
+            console.error('讀取排行榜失敗:', error);
+            listElem.innerHTML = '<li class="leaderboard-item"><span>讀取失敗</span><span></span></li>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            listElem.innerHTML = '<li class="leaderboard-item"><span>尚無紀錄</span><span></span></li>';
+            return;
+        }
+
+        listElem.innerHTML = '';
+        data.forEach((row, index) => {
+            const li = document.createElement('li');
+            li.className = 'leaderboard-item';
+            li.innerHTML = `<span>${index + 1}. ${escapeHtml(row.name)}</span><span><b>${row.score}</b> 分</span>`;
+            listElem.appendChild(li);
+        });
+    }
+
+    // 簡單的 HTML 轉義防範 XSS
+    function escapeHtml(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // ==========================================
+    // 遊戲主程式碼
+    // ==========================================
     const rows = 14;
     const cols = 3;
     let boardData = [];
@@ -313,53 +457,17 @@
         });
     }
 
-    // 原始字庫分類
     const rawGamePool = [
-        // 1. CVC 短母音系列
-        {
-            vowel: "Short A",
-            words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"]
-        },
-        {
-            vowel: "Short E",
-            words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"]
-        },
-        {
-            vowel: "Short I",
-            words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"]
-        },
-        {
-            vowel: "Short O",
-            words: ["jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"]
-        },
-        {
-            vowel: "Short U",
-            words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"]
-        },
-
-        // 2. 長母音系列 (LONG A, E, I, O, U)
-        {
-            vowel: "Long A",
-            words: ["gate", "pail", "day", "wave", "rain", "play"]
-        },
-        {
-            vowel: "Long E",
-            words: ["Eve", "peach", "green", "these", "tea", "tree"]
-        },
-        {
-            vowel: "Long I",
-            words: ["bite", "pie", "light", "rice", "tie", "night"]
-        },
-        {
-            vowel: "Long O",
-            words: ["hole", "boat", "snow", "mole", "goat", "yellow"]
-        },
-        {
-            vowel: "Long U",
-            words: ["cute", "flute", "blue", "fruit", "tube", "Luke", "glue", "suit"]
-        },
-
-        // 3. 子音組系列 (Consonant Blends & Digraphs)
+        { vowel: "Short A", words: ["cat", "bat", "hat", "mat", "rat", "sat", "fat", "pan", "can", "fan", "man", "van", "map", "nap", "cap", "tap", "bag", "tag", "rag", "wag", "dad", "jam"] },
+        { vowel: "Short E", words: ["bed", "red", "fed", "led", "pen", "hen", "men", "den", "net", "pet", "wet", "vet", "jet", "web"] },
+        { vowel: "Short I", words: ["big", "pig", "dig", "fig", "wig", "bin", "pin", "win", "tin", "lip", "tip", "hip", "zip", "sit", "hit", "pit", "kit", "mix", "fin"] },
+        { vowel: "Short O", words: ["jog", "pot", "hot", "cot", "dot", "top", "mop", "hop", "pop", "box", "fox", "mom", "cop"] },
+        { vowel: "Short U", words: ["bug", "mug", "rug", "jug", "bun", "run", "sun", "fun", "nut", "cut", "hut", "tub", "sub", "rub", "cup", "mud", "gum"] },
+        { vowel: "Long A", words: ["gate", "pail", "day", "wave", "rain", "play"] },
+        { vowel: "Long E", words: ["Eve", "peach", "green", "these", "tea", "tree"] },
+        { vowel: "Long I", words: ["bite", "pie", "light", "rice", "tie", "night"] },
+        { vowel: "Long O", words: ["hole", "boat", "snow", "mole", "goat", "yellow"] },
+        { vowel: "Long U", words: ["cute", "flute", "blue", "fruit", "tube", "Luke", "glue", "suit"] },
         { vowel: "th (無聲)", words: ["three", "teeth", "mouth"] },
         { vowel: "th (有聲)", words: ["this", "father", "mother"] },
         { vowel: "wh", words: ["white", "wheel", "whale"] },
@@ -383,7 +491,6 @@
         { vowel: "sk", words: ["ski", "sky", "skin"] }
     ];
 
-    // 展開成扁平化的遊戲選單 { display, sound }
     let gamePool = [];
     rawGamePool.forEach(group => {
         group.words.forEach(w => {
@@ -417,6 +524,9 @@
     function startGame() {
         initAudio();
         document.getElementById('gameOverOverlay').style.display = 'none';
+        document.getElementById('submitBox').style.display = 'flex'; // 重新開始時恢復顯示輸入框
+        document.getElementById('playerName').value = '';
+        
         document.getElementById('startBtn').innerText = '進行中';
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
@@ -648,7 +758,7 @@
             score += matchCount * 10;
             document.getElementById('score').innerText = score;
 
-            if (score >= 100 && score % 100 === 0 && dropSpeed > 1000) { // 每增加100分，下降速度加快
+            if (score >= 100 && score % 100 === 0 && dropSpeed > 1000) {
                 dropSpeed -= 100;
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, dropSpeed);
@@ -712,6 +822,10 @@
 
         document.getElementById('finalScore').innerText = score;
         document.getElementById('gameOverOverlay').style.display = 'flex';
+        
+        // 遊戲結束時自動抓取最新排行榜顯示
+        fetchLeaderboard();
+
         document.getElementById('startBtn').innerText = '開始遊戲';
         document.getElementById('startBtn').disabled = false;
         document.getElementById('pauseBtn').disabled = true;
