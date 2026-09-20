@@ -84,7 +84,7 @@
         <div id="quiz-screen" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="confirmExit()" class="text-xs bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 font-bold">✕ 結束測驗</button>
-                <div id="wordking-timer-badge" class="hidden text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">⏱️ 已用時間: <span id="timer-display">0.0</span>秒</div>
+                <div id="wordking-timer-badge" class="hidden text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">⏱️ 本題耗時: <span id="timer-display">0.0</span>秒</div>
                 <div class="flex items-center space-x-2">
                     <span class="text-[10px] text-slate-400 font-bold">自動發音</span>
                     <label class="relative inline-block w-10 h-6">
@@ -119,8 +119,8 @@
             <div class="py-2">
                 <span class="text-4xl mb-1 block">🏆</span>
                 <h2 class="text-xl font-bold text-slate-800">單字王爭霸戰完成！</h2>
-                <p class="text-slate-600 text-xs font-bold mt-0.5">正確答題數: <span id="wk-correct-count" class="text-indigo-600">0</span> / 25 | 總耗時: <span id="wk-time">0</span>秒</p>
-                <p class="text-amber-600 font-extrabold text-base mt-0.5">綜合積分: <span id="wk-final-score">0</span></p>
+                <p class="text-slate-600 text-xs font-bold mt-0.5">正確答題數: <span id="wk-correct-count" class="text-indigo-600">0</span> / 25</p>
+                <p class="text-amber-600 font-extrabold text-base mt-0.5">最終總積分: <span id="wk-final-score">0</span></p>
             </div>
 
             <div id="wk-submit-box" class="space-y-1.5 bg-slate-50 p-2.5 rounded-2xl border">
@@ -158,9 +158,8 @@
 
         // 單字王比賽專屬變數
         let isWordKingMode = false;
-        let wkStartTime = 0;
-        let wkTimerInterval = null;
-        let wkElapsedSeconds = 0;
+        let wkQuestionStartTime = 0;
+        let wkQuestionTimerInterval = null;
         let wkCorrectCount = 0;
 
         function myAlert(msg) {
@@ -211,7 +210,7 @@
             if (!studentId) return myAlert("請先完成登入");
             isWordKingMode = false;
             const { data } = await myApp.from('words').select('*').eq('level', level);
-            allWords = data;
+            allWords = data || [];
             document.getElementById('welcome-msg').textContent = `準備好挑戰了嗎？`;
             showScreen('quiz-selection');
         }
@@ -221,53 +220,61 @@
             isWordKingMode = true;
             isReviewingErrors = false;
 
-            const [elemRes, junRes, senRes] = await Promise.all([
-                myApp.from('words').select('*').eq('level', 'elementary'),
-                myApp.from('words').select('*').eq('level', 'junior'),
-                myApp.from('words').select('*').eq('level', 'senior')
-            ]);
+            try {
+                // 獨立分開查詢並加入容錯，避免 Promise.all 因為某個等級回傳空而出錯
+                const elemRes = await myApp.from('words').select('*').eq('level', 'elementary');
+                const junRes = await myApp.from('words').select('*').eq('level', 'junior');
+                const senRes = await myApp.from('words').select('*').eq('level', 'senior');
 
-            if (elemRes.error || junRes.error || senRes.error) {
-                return myAlert("無法讀取資料庫單字，請稍後再試！");
+                const elemWords = elemRes.data || [];
+                const junWords = junRes.data || [];
+                const senWords = senRes.data || [];
+
+                allWords = [...elemWords, ...junWords, ...senWords];
+                if (allWords.length === 0) {
+                    return myAlert("資料庫中找不到單字資料！");
+                }
+
+                // 彈性抽題：若各級距數量不足指定數量，則自動從現有單字隨機補足 25 題
+                const pickedElem = [...elemWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(10, elemWords.length));
+                const remain1 = 10 - pickedElem.length;
+                
+                const pickedJun = [...junWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(10 + remain1, junWords.length));
+                const remain2 = 5 - (25 - pickedElem.length - pickedJun.length);
+                
+                const pickedSen = [...senWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(5 + Math.max(0, remain2), senWords.length));
+
+                shuffledVocabulary = [...pickedElem, ...pickedJun, ...pickedSen].sort(() => 0.5 - Math.random());
+                if (shuffledVocabulary.length > 25) {
+                    shuffledVocabulary = shuffledVocabulary.slice(0, 25);
+                }
+
+                if (shuffledVocabulary.length < 5) {
+                    return myAlert("題庫總單字數量過少，無法進行單字王比賽！");
+                }
+
+                currentQuizType = 'eng-to-chi';
+                currentQuestionIndex = 0;
+                score = 0;
+                wkCorrectCount = 0;
+                document.getElementById('score').textContent = score;
+
+                document.getElementById('wordking-timer-badge').classList.remove('hidden');
+                showScreen('quiz-screen');
+
+                loadNextQuestion();
+            } catch (err) {
+                console.error(err);
+                myAlert("讀取單字王題庫發生例外錯誤！");
             }
-
-            const elemWords = elemRes.data || [];
-            const junWords = junRes.data || [];
-            const senWords = senRes.data || [];
-
-            if (elemWords.length < 10 || junWords.length < 10 || senWords.length < 6) {
-                return myAlert("各級距資料庫單字數量不足！");
-            }
-
-            const pickedElem = [...elemWords].sort(() => 0.5 - Math.random()).slice(0, 10);
-            const pickedJun = [...junWords].sort(() => 0.5 - Math.random()).slice(0, 10);
-            const pickedSen = [...senWords].sort(() => 0.5 - Math.random()).slice(0, 5);
-
-            shuffledVocabulary = [...pickedElem, ...pickedJun, ...pickedSen];
-            allWords = [...elemWords, ...junWords, ...senWords];
-
-            currentQuizType = 'eng-to-chi';
-            currentQuestionIndex = 0;
-            score = 0;
-            wkCorrectCount = 0;
-            document.getElementById('score').textContent = score;
-
-            document.getElementById('wordking-timer-badge').classList.remove('hidden');
-            showScreen('quiz-screen');
-
-            wkStartTime = Date.now();
-            if (wkTimerInterval) clearInterval(wkTimerInterval);
-            wkTimerInterval = setInterval(() => {
-                wkElapsedSeconds = ((Date.now() - wkStartTime) / 1000).toFixed(1);
-                document.getElementById('timer-display').textContent = wkElapsedSeconds;
-            }, 100);
-
-            loadNextQuestion();
         }
 
         function startQuiz(type) {
             isWordKingMode = false;
             isReviewingErrors = false;
+            if (!allWords || allWords.length === 0) {
+                return myAlert("目前該等級沒有單字資料！");
+            }
             shuffledVocabulary = [...allWords].sort(() => 0.5 - Math.random()).slice(0, 10);
             initQuizUI(type);
         }
@@ -317,7 +324,7 @@
             document.getElementById('question-text').textContent = questionVal;
             
             if (isWordKingMode) {
-                document.getElementById('wordking-progress').textContent = `單字王挑戰進度：第 ${currentQuestionIndex + 1} / 25 題`;
+                document.getElementById('wordking-progress').textContent = `單字王挑戰進度：第 ${currentQuestionIndex + 1} / ${shuffledVocabulary.length} 題`;
             } else {
                 document.getElementById('wordking-progress').textContent = `第 ${currentQuestionIndex + 1} / ${shuffledVocabulary.length} 題`;
             }
@@ -336,11 +343,26 @@
                 btn.onclick = () => handleAnswer(opt, btn, current);
                 container.appendChild(btn);
             });
+
+            // 如果是單字王模式，啟動單題計時器
+            if (isWordKingMode) {
+                wkQuestionStartTime = Date.now();
+                if (wkQuestionTimerInterval) clearInterval(wkQuestionTimerInterval);
+                wkQuestionTimerInterval = setInterval(() => {
+                    const elapsed = ((Date.now() - wkQuestionStartTime) / 1000).toFixed(1);
+                    document.getElementById('timer-display').textContent = elapsed;
+                }, 100);
+            }
         }
 
         async function handleAnswer(selected, btn, correct) {
             if (isAnswering) return;
             isAnswering = true;
+
+            if (isWordKingMode && wkQuestionTimerInterval) {
+                clearInterval(wkQuestionTimerInterval);
+            }
+
             const correctEng = correct.english || correct.word;
             const selectedEng = selected.english || selected.word;
             const isCorrect = selectedEng === correctEng;
@@ -348,8 +370,28 @@
             if (isWordKingMode) {
                 if (isCorrect) {
                     btn.classList.add('option-correct');
-                    score += 100;
                     wkCorrectCount++;
+
+                    // 1. 依照題號區間決定基礎分 (1-10題:100分, 11-20題:200分, 21-25題:300分)
+                    let baseScore = 100;
+                    if (currentQuestionIndex >= 10 && currentQuestionIndex < 20) {
+                        baseScore = 200;
+                    } else if (currentQuestionIndex >= 20) {
+                        baseScore = 300;
+                    }
+
+                    // 2. 依照單題耗時計算時間加分
+                    const elapsedSeconds = (Date.now() - wkQuestionStartTime) / 1000;
+                    let timeBonus = 0;
+                    if (elapsedSeconds <= 1.0) {
+                        timeBonus = 100; // 1秒內答對加100分
+                    } else {
+                        // 每增加1秒少10分，超過10秒加0分
+                        let calculatedBonus = 100 - Math.floor((elapsedSeconds - 1) * 10);
+                        timeBonus = Math.max(0, calculatedBonus);
+                    }
+
+                    score += (baseScore + timeBonus);
                 } else {
                     btn.classList.add('option-wrong');
                     document.querySelectorAll('#options-container button').forEach(b => {
@@ -388,16 +430,11 @@
         }
 
         function endWordKingMode() {
-            clearInterval(wkTimerInterval);
+            if (wkQuestionTimerInterval) clearInterval(wkQuestionTimerInterval);
             if (window.speechSynthesis) window.speechSynthesis.cancel();
 
-            wkElapsedSeconds = ((Date.now() - wkStartTime) / 1000).toFixed(1);
-            
-            const finalCalculatedScore = Math.round((wkCorrectCount * 1000) - (parseFloat(wkElapsedSeconds) * 10));
-
             document.getElementById('wk-correct-count').textContent = wkCorrectCount;
-            document.getElementById('wk-time').textContent = wkElapsedSeconds;
-            document.getElementById('wk-final-score').textContent = finalCalculatedScore > 0 ? finalCalculatedScore : 0;
+            document.getElementById('wk-final-score').textContent = score;
 
             document.getElementById('wk-submit-box').style.display = 'block';
             showScreen('wordking-result-screen');
@@ -448,7 +485,12 @@
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
-        function confirmExit() { if (confirm("結束測驗並回到首頁？")) { if(wkTimerInterval) clearInterval(wkTimerInterval); showScreen('level-selection'); } }
+        function confirmExit() { 
+            if (confirm("結束測驗並回到首頁？")) { 
+                if(wkQuestionTimerInterval) clearInterval(wkQuestionTimerInterval); 
+                showScreen('level-selection'); 
+            } 
+        }
         function showResult() { document.getElementById('final-score').textContent = score; showScreen('result-screen'); }
         
         function speakWord() {
