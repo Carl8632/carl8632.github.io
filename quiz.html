@@ -115,23 +115,25 @@
         </div>
 
         <!-- 單字王專屬結算與獨立排行榜畫面 -->
-        <div id="wordking-result-screen" class="hidden text-center space-y-4">
-            <div class="py-4">
-                <span class="text-5xl mb-2 block">🏆</span>
-                <h2 class="text-2xl font-bold text-slate-800">單字王爭霸戰完成！</h2>
-                <p class="text-slate-600 text-sm font-bold mt-1">正確答題數: <span id="wk-correct-count" class="text-indigo-600">0</span> / 25 | 總耗時: <span id="wk-time">0</span>秒</p>
-                <p class="text-amber-600 font-extrabold text-lg mt-1">綜合積分分數: <span id="wk-final-score">0</span></p>
+        <div id="wordking-result-screen" class="hidden text-center space-y-3">
+            <div class="py-2">
+                <span class="text-4xl mb-1 block">🏆</span>
+                <h2 class="text-xl font-bold text-slate-800">單字王爭霸戰完成！</h2>
+                <p class="text-slate-600 text-xs font-bold mt-0.5">正確答題數: <span id="wk-correct-count" class="text-indigo-600">0</span> / 25 | 總耗時: <span id="wk-time">0</span>秒</p>
+                <p class="text-amber-600 font-extrabold text-base mt-0.5">綜合積分: <span id="wk-final-score">0</span></p>
             </div>
 
-            <div id="wk-submit-box" class="space-y-2 bg-slate-50 p-3 rounded-2xl border">
-                <p class="text-xs text-slate-500 font-bold">請輸入您的單字王英雄榜顯示名稱 (例如: 601_John)</p>
-                <input type="text" id="wk-nickname" placeholder="輸入英文或數字暱稱" maxlength="12" class="w-full p-2.5 text-center rounded-xl border border-slate-300 outline-none text-sm font-bold">
-                <button onclick="submitWordKingScore()" class="w-full py-2.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 text-sm shadow-md">送出成績登錄單字王排行榜</button>
+            <div id="wk-submit-box" class="space-y-1.5 bg-slate-50 p-2.5 rounded-2xl border">
+                <p class="text-[11px] text-slate-500 font-bold">請輸入您的單字王英雄榜顯示名稱 (例如: 601_John)</p>
+                <div class="flex gap-2">
+                    <input type="text" id="wk-nickname" placeholder="輸入暱稱" maxlength="12" class="w-2/3 p-2 text-center rounded-xl border border-slate-300 outline-none text-xs font-bold">
+                    <button onclick="submitWordKingScore()" class="w-1/3 py-2 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 text-xs shadow-md">送出成績</button>
+                </div>
             </div>
 
             <div class="bg-slate-900 text-white p-3 rounded-2xl text-left">
-                <h3 class="text-xs font-bold text-amber-400 mb-2 text-center">🌟 單字王專屬排行榜 TOP 10</h3>
-                <ul id="leaderboard-list" class="space-y-1 text-xs max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                <h3 class="text-xs font-bold text-amber-400 mb-2 text-center">🌟 單字王排行榜</h3>
+                <ul id="leaderboard-list" class="space-y-1 text-xs max-h-32 overflow-y-auto custom-scrollbar pr-1">
                     <li class="text-center text-slate-400 py-2">載入中...</li>
                 </ul>
             </div>
@@ -219,7 +221,6 @@
             isWordKingMode = true;
             isReviewingErrors = false;
 
-            // 分別抓取各個等級的單字
             const [elemRes, junRes, senRes] = await Promise.all([
                 myApp.from('words').select('*').eq('level', 'elementary'),
                 myApp.from('words').select('*').eq('level', 'junior'),
@@ -238,7 +239,6 @@
                 return myAlert("各級距資料庫單字數量不足！");
             }
 
-            // 隨機抽取各級距指定題數：1~10題 (國小)、11~20題 (國中)、21~25題 (高中)
             const pickedElem = [...elemWords].sort(() => 0.5 - Math.random()).slice(0, 10);
             const pickedJun = [...junWords].sort(() => 0.5 - Math.random()).slice(0, 10);
             const pickedSen = [...senWords].sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -399,6 +399,7 @@
             document.getElementById('wk-time').textContent = wkElapsedSeconds;
             document.getElementById('wk-final-score').textContent = finalCalculatedScore > 0 ? finalCalculatedScore : 0;
 
+            // 確保每次一到結算畫面就顯示輸入框並直接載入排行榜
             document.getElementById('wk-submit-box').style.display = 'block';
             showScreen('wordking-result-screen');
             fetchLeaderboard();
@@ -415,8 +416,7 @@
                 console.error(error);
                 myAlert("上傳失敗，請確認是否已在 Supabase 建立 word_king_leaderboard 資料表");
             } else {
-                document.getElementById('wk-submit-box').style.display = 'none';
-                myAlert("成績成功送出並登錄單字王排行榜！");
+                myAlert("成績成功送出並更新排行榜！");
                 fetchLeaderboard();
             }
         }
