@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英語好簡單</title>
+    <title>英語好簡單 - 單字王比賽</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -41,6 +41,7 @@
 
     <div id="app" class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-slate-100">
         
+        <!-- 等級與登入選單畫面 -->
         <div id="level-selection" class="space-y-6">
             <button onclick="window.location.href='index.html'" class="text-sm text-indigo-600 hover:underline">← 返回大廳</button>
             
@@ -62,12 +63,14 @@
             </div>
 
             <div id="level-buttons" class="grid grid-cols-1 gap-3 pt-4 border-t border-slate-100">
-                <button onclick="selectLevel('elementary')" class="py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg hover:bg-green-600 transition text-lg">國小基礎</button>
-                <button onclick="selectLevel('junior')" class="py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-600 transition text-lg">國中必備</button>
-                <button onclick="selectLevel('senior')" class="py-4 bg-purple-500 text-white rounded-2xl font-bold shadow-lg hover:bg-purple-600 transition text-lg">高中核心</button>
+                <button onclick="selectLevel('elementary')" class="py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg hover:bg-green-600 transition text-lg">國小基礎練習</button>
+                <button onclick="selectLevel('junior')" class="py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-600 transition text-lg">國中必備練習</button>
+                <button onclick="selectLevel('senior')" class="py-4 bg-purple-500 text-white rounded-2xl font-bold shadow-lg hover:bg-purple-600 transition text-lg">高中核心練習</button>
+                <button onclick="startWordKingMode()" class="py-4 bg-amber-500 text-white rounded-2xl font-bold shadow-lg hover:bg-amber-600 transition text-lg flex items-center justify-center gap-2">🏆 單字王比賽</button>
             </div>
         </div>
 
+        <!-- 一般測驗類型選單畫面 -->
         <div id="quiz-selection" class="hidden space-y-6 text-center">
             <button onclick="showScreen('level-selection')" class="text-sm text-indigo-600 hover:underline">← 返回選擇等級</button>
             <h2 id="welcome-msg" class="text-xl font-bold text-slate-700"></h2>
@@ -77,9 +80,11 @@
             </div>
         </div>
 
+        <!-- 測驗進行中畫面 -->
         <div id="quiz-screen" class="hidden">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-4">
                 <button onclick="confirmExit()" class="text-xs bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 font-bold">✕ 結束測驗</button>
+                <div id="wordking-timer-badge" class="hidden text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">⏱️ 已用時間: <span id="timer-display">0.0</span>秒</div>
                 <div class="flex items-center space-x-2">
                     <span class="text-[10px] text-slate-400 font-bold">自動發音</span>
                     <label class="relative inline-block w-10 h-6">
@@ -89,7 +94,8 @@
                 </div>
             </div>
             <div class="text-center mb-6">
-                <h2 id="question-text" class="text-5xl font-bold text-slate-800 mb-6"></h2>
+                <div id="wordking-progress" class="text-xs text-slate-400 font-bold mb-1"></div>
+                <h2 id="question-text" class="text-4xl font-bold text-slate-800 mb-4"></h2>
                 <div class="flex items-center justify-center space-x-6">
                     <button onclick="speakWord()" class="px-6 py-2 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold border border-indigo-100">🔊 聽聲音</button>
                     <div class="text-slate-400 text-sm font-bold">得分: <span id="score" class="text-indigo-600">0</span></div>
@@ -98,13 +104,39 @@
             <div id="options-container" class="grid grid-cols-1 gap-2"></div>
         </div>
 
+        <!-- 一般測驗結束畫面 -->
         <div id="result-screen" class="hidden text-center">
             <div class="py-10">
                 <span class="text-6xl mb-4 block">🎉</span>
                 <h2 class="text-3xl font-bold text-slate-800 mb-2">測驗結束！</h2>
                 <p class="text-slate-500 text-xl font-bold">得分：<span id="final-score" class="text-indigo-600">0</span></p>
             </div>
-            <button onclick="loginAndLoad()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-700">回到測驗首頁</button>
+            <button onclick="showScreen('level-selection')" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-700">回到測驗首頁</button>
+        </div>
+
+        <!-- 單字王專屬結算與獨立排行榜畫面 -->
+        <div id="wordking-result-screen" class="hidden text-center space-y-4">
+            <div class="py-4">
+                <span class="text-5xl mb-2 block">🏆</span>
+                <h2 class="text-2xl font-bold text-slate-800">單字王爭霸戰完成！</h2>
+                <p class="text-slate-600 text-sm font-bold mt-1">正確答題數: <span id="wk-correct-count" class="text-indigo-600">0</span> / 25 | 總耗時: <span id="wk-time">0</span>秒</p>
+                <p class="text-amber-600 font-extrabold text-lg mt-1">綜合積分分數: <span id="wk-final-score">0</span></p>
+            </div>
+
+            <div id="wk-submit-box" class="space-y-2 bg-slate-50 p-3 rounded-2xl border">
+                <p class="text-xs text-slate-500 font-bold">請輸入您的單字王英雄榜顯示名稱 (例如: 601_John)</p>
+                <input type="text" id="wk-nickname" placeholder="輸入英文或數字暱稱" maxlength="12" class="w-full p-2.5 text-center rounded-xl border border-slate-300 outline-none text-sm font-bold">
+                <button onclick="submitWordKingScore()" class="w-full py-2.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 text-sm shadow-md">送出成績登錄單字王排行榜</button>
+            </div>
+
+            <div class="bg-slate-900 text-white p-3 rounded-2xl text-left">
+                <h3 class="text-xs font-bold text-amber-400 mb-2 text-center">🌟 單字王專屬排行榜 TOP 10</h3>
+                <ul id="leaderboard-list" class="space-y-1 text-xs max-h-36 overflow-y-auto custom-scrollbar pr-1">
+                    <li class="text-center text-slate-400 py-2">載入中...</li>
+                </ul>
+            </div>
+
+            <button onclick="showScreen('level-selection')" class="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-700 text-sm">返回首頁</button>
         </div>
     </div>
 
@@ -122,6 +154,13 @@
         let isAnswering = false;
         let currentQuizType = "";
 
+        // 單字王比賽專屬變數
+        let isWordKingMode = false;
+        let wkStartTime = 0;
+        let wkTimerInterval = null;
+        let wkElapsedSeconds = 0;
+        let wkCorrectCount = 0;
+
         function myAlert(msg) {
             document.getElementById('alert-message').textContent = msg;
             document.getElementById('custom-alert').style.display = 'flex';
@@ -138,9 +177,11 @@
             studentId = `${classVal}_${nameVal}`;
             document.getElementById('login-btn').textContent = "讀取中...";
 
+            document.getElementById('wk-nickname').value = studentId;
+
             const { data, error } = await myApp.from('user_errors').select('word, chinese').eq('student_id', studentId);
             
-            if (!error) {
+            if (!error && data) {
                 const formattedErrors = data.map(d => ({ word: d.word, chinese: d.chinese }));
                 localStorage.setItem('wrongWords', JSON.stringify(formattedErrors));
 
@@ -160,26 +201,79 @@
                     document.getElementById('personal-error-container').classList.add('hidden');
                 }
             }
-            // 回復成你原本期望的文字
             document.getElementById('login-btn').textContent = "刷新紀錄成功";
             showScreen('level-selection');
         }
 
         async function selectLevel(level) {
             if (!studentId) return myAlert("請先完成登入");
+            isWordKingMode = false;
             const { data } = await myApp.from('words').select('*').eq('level', level);
             allWords = data;
             document.getElementById('welcome-msg').textContent = `準備好挑戰了嗎？`;
             showScreen('quiz-selection');
         }
 
+        async function startWordKingMode() {
+            if (!studentId) return myAlert("參與單字王比賽前請先完成上方學生登入！");
+            isWordKingMode = true;
+            isReviewingErrors = false;
+
+            // 分別抓取各個等級的單字
+            const [elemRes, junRes, senRes] = await Promise.all([
+                myApp.from('words').select('*').eq('level', 'elementary'),
+                myApp.from('words').select('*').eq('level', 'junior'),
+                myApp.from('words').select('*').eq('level', 'senior')
+            ]);
+
+            if (elemRes.error || junRes.error || senRes.error) {
+                return myAlert("無法讀取資料庫單字，請稍後再試！");
+            }
+
+            const elemWords = elemRes.data || [];
+            const junWords = junRes.data || [];
+            const senWords = senRes.data || [];
+
+            if (elemWords.length < 10 || junWords.length < 10 || senWords.length < 6) {
+                return myAlert("各級距資料庫單字數量不足！");
+            }
+
+            // 隨機抽取各級距指定題數：1~10題 (國小)、11~20題 (國中)、21~25題 (高中)
+            const pickedElem = [...elemWords].sort(() => 0.5 - Math.random()).slice(0, 10);
+            const pickedJun = [...junWords].sort(() => 0.5 - Math.random()).slice(0, 10);
+            const pickedSen = [...senWords].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            shuffledVocabulary = [...pickedElem, ...pickedJun, ...pickedSen];
+            allWords = [...elemWords, ...junWords, ...senWords];
+
+            currentQuizType = 'eng-to-chi';
+            currentQuestionIndex = 0;
+            score = 0;
+            wkCorrectCount = 0;
+            document.getElementById('score').textContent = score;
+
+            document.getElementById('wordking-timer-badge').classList.remove('hidden');
+            showScreen('quiz-screen');
+
+            wkStartTime = Date.now();
+            if (wkTimerInterval) clearInterval(wkTimerInterval);
+            wkTimerInterval = setInterval(() => {
+                wkElapsedSeconds = ((Date.now() - wkStartTime) / 1000).toFixed(1);
+                document.getElementById('timer-display').textContent = wkElapsedSeconds;
+            }, 100);
+
+            loadNextQuestion();
+        }
+
         function startQuiz(type) {
+            isWordKingMode = false;
             isReviewingErrors = false;
             shuffledVocabulary = [...allWords].sort(() => 0.5 - Math.random()).slice(0, 10);
             initQuizUI(type);
         }
 
         async function startErrorQuiz() {
+            isWordKingMode = false;
             const { data } = await myApp.from('user_errors').select('word, chinese').eq('student_id', studentId);
             if (!data || data.length === 0) return myAlert("目前沒有錯題紀錄！");
 
@@ -194,7 +288,6 @@
 
             isReviewingErrors = true;
             shuffledVocabulary = unique.sort(() => 0.5 - Math.random());
-            // 這裡修正：啟動測驗介面
             initQuizUI('eng-to-chi');
         }
 
@@ -202,28 +295,43 @@
             currentQuizType = type;
             currentQuestionIndex = 0; score = 0;
             document.getElementById('score').textContent = score;
+            document.getElementById('wordking-timer-badge').classList.add('hidden');
             showScreen('quiz-screen');
             loadNextQuestion();
         }
 
         function loadNextQuestion() {
-            if (currentQuestionIndex >= shuffledVocabulary.length) return showResult();
+            if (currentQuestionIndex >= shuffledVocabulary.length) {
+                if (isWordKingMode) {
+                    endWordKingMode();
+                } else {
+                    showResult();
+                }
+                return;
+            }
+
             isAnswering = false;
             const current = shuffledVocabulary[currentQuestionIndex];
-            // 修正欄位抓取，確保 english 存在
             const questionVal = currentQuizType === 'eng-to-chi' ? (current.english || current.word) : current.chinese;
+            
             document.getElementById('question-text').textContent = questionVal;
             
+            if (isWordKingMode) {
+                document.getElementById('wordking-progress').textContent = `單字王挑戰進度：第 ${currentQuestionIndex + 1} / 25 題`;
+            } else {
+                document.getElementById('wordking-progress').textContent = `第 ${currentQuestionIndex + 1} / ${shuffledVocabulary.length} 題`;
+            }
+
             if (document.getElementById('auto-voice').checked) setTimeout(() => speakWord(), 100);
 
-            let distractors = allWords.filter(w => w.english !== (current.english || current.word)).sort(() => 0.5 - Math.random()).slice(0, 3);
-            let options = [...distractors, { english: current.english || current.word, chinese: current.chinese }].sort(() => 0.5 - Math.random());
+            let distractors = allWords.filter(w => (w.english || w.word) !== (current.english || current.word)).sort(() => 0.5 - Math.random()).slice(0, 3);
+            let options = [...distractors, { english: current.english || current.word, chinese: current.chinese, word: current.word }].sort(() => 0.5 - Math.random());
             
             const container = document.getElementById('options-container');
             container.innerHTML = '';
             options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = "w-full py-2.5 px-4 text-center bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold transition-all text-black hover:bg-slate-100 text-3xl break-words leading-tight shadow-sm active:scale-95";
+                btn.className = "w-full py-2.5 px-4 text-center bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold transition-all text-black hover:bg-slate-100 text-2xl break-words leading-tight shadow-sm active:scale-95";
                 btn.textContent = currentQuizType === 'eng-to-chi' ? opt.chinese : (opt.english || opt.word);
                 btn.onclick = () => handleAnswer(opt, btn, current);
                 container.appendChild(btn);
@@ -234,35 +342,44 @@
             if (isAnswering) return;
             isAnswering = true;
             const correctEng = correct.english || correct.word;
-            const isCorrect = (selected.english || selected.word) === correctEng;
+            const selectedEng = selected.english || selected.word;
+            const isCorrect = selectedEng === correctEng;
 
-            let totalCount = parseInt(localStorage.getItem('quizTotalCount') || '0');
-            localStorage.setItem('quizTotalCount', totalCount + 1);
-            
-            if (isCorrect) {
-                btn.classList.add('option-correct');
-                score += 10;
-
-                let localWrong = JSON.parse(localStorage.getItem('wrongWords') || '[]');
-                localWrong = localWrong.filter(item => item.word !== correctEng);
-                localStorage.setItem('wrongWords', JSON.stringify(localWrong));
-
-                await myApp.from('user_errors').delete().eq('student_id', studentId).eq('word', correctEng);
-            } else {
-                btn.classList.add('option-wrong');
-                await myApp.from('user_errors').insert([{ student_id: studentId, word: correctEng, chinese: correct.chinese }]);
-                
-                let localWrong = JSON.parse(localStorage.getItem('wrongWords') || '[]');
-                if(!localWrong.some(i => i.word === correctEng)) {
-                    localWrong.push({ word: correctEng, chinese: correct.chinese });
-                    localStorage.setItem('wrongWords', JSON.stringify(localWrong));
+            if (isWordKingMode) {
+                if (isCorrect) {
+                    btn.classList.add('option-correct');
+                    score += 100;
+                    wkCorrectCount++;
+                } else {
+                    btn.classList.add('option-wrong');
+                    document.querySelectorAll('#options-container button').forEach(b => {
+                        const correctText = currentQuizType === 'eng-to-chi' ? correct.chinese : correctEng;
+                        if (b.textContent === correctText) b.classList.add('option-correct');
+                    });
                 }
-
-                document.querySelectorAll('#options-container button').forEach(b => {
-                    const correctText = currentQuizType === 'eng-to-chi' ? correct.chinese : correctEng;
-                    if (b.textContent === correctText) b.classList.add('option-correct');
-                });
+            } else {
+                if (isCorrect) {
+                    btn.classList.add('option-correct');
+                    score += 10;
+                    let localWrong = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+                    localWrong = localWrong.filter(item => item.word !== correctEng);
+                    localStorage.setItem('wrongWords', JSON.stringify(localWrong));
+                    await myApp.from('user_errors').delete().eq('student_id', studentId).eq('word', correctEng);
+                } else {
+                    btn.classList.add('option-wrong');
+                    await myApp.from('user_errors').insert([{ student_id: studentId, word: correctEng, chinese: correct.chinese }]);
+                    let localWrong = JSON.parse(localStorage.getItem('wrongWords') || '[]');
+                    if(!localWrong.some(i => i.word === correctEng)) {
+                        localWrong.push({ word: correctEng, chinese: correct.chinese });
+                        localStorage.setItem('wrongWords', JSON.stringify(localWrong));
+                    }
+                    document.querySelectorAll('#options-container button').forEach(b => {
+                        const correctText = currentQuizType === 'eng-to-chi' ? correct.chinese : correctEng;
+                        if (b.textContent === correctText) b.classList.add('option-correct');
+                    });
+                }
             }
+
             setTimeout(() => { 
                 document.getElementById('score').textContent = score;
                 currentQuestionIndex++; 
@@ -270,8 +387,71 @@
             }, 700);
         }
 
-        function confirmExit() { if (confirm("結束測驗並回到首頁？")) backToHome(); }
+        function endWordKingMode() {
+            clearInterval(wkTimerInterval);
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+            wkElapsedSeconds = ((Date.now() - wkStartTime) / 1000).toFixed(1);
+            
+            const finalCalculatedScore = Math.round((wkCorrectCount * 1000) - (parseFloat(wkElapsedSeconds) * 10));
+
+            document.getElementById('wk-correct-count').textContent = wkCorrectCount;
+            document.getElementById('wk-time').textContent = wkElapsedSeconds;
+            document.getElementById('wk-final-score').textContent = finalCalculatedScore > 0 ? finalCalculatedScore : 0;
+
+            document.getElementById('wk-submit-box').style.display = 'block';
+            showScreen('wordking-result-screen');
+            fetchLeaderboard();
+        }
+
+        async function submitWordKingScore() {
+            const nickname = document.getElementById('wk-nickname').value.trim();
+            const finalScore = parseInt(document.getElementById('wk-final-score').textContent);
+
+            if (!nickname) return myAlert("請輸入您的英雄榜顯示名稱！");
+
+            const { error } = await myApp.from('word_king_leaderboard').insert([{ name: nickname, score: finalScore }]);
+            if (error) {
+                console.error(error);
+                myAlert("上傳失敗，請確認是否已在 Supabase 建立 word_king_leaderboard 資料表");
+            } else {
+                document.getElementById('wk-submit-box').style.display = 'none';
+                myAlert("成績成功送出並登錄單字王排行榜！");
+                fetchLeaderboard();
+            }
+        }
+
+        async function fetchLeaderboard() {
+            const listEl = document.getElementById('leaderboard-list');
+            listEl.innerHTML = '<li class="text-center text-slate-400 py-2">載入排行榜中...</li>';
+
+            const { data, error } = await myApp.from('word_king_leaderboard').select('*').order('score', { ascending: false }).limit(10);
+            if (error || !data) {
+                listEl.innerHTML = '<li class="text-center text-red-400 py-2">讀取排行榜失敗 (請檢查資料表)</li>';
+                return;
+            }
+
+            if (data.length === 0) {
+                listEl.innerHTML = '<li class="text-center text-slate-400 py-2">目前尚無單字王競賽紀錄</li>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            data.forEach((row, idx) => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center px-3 py-1.5 bg-slate-800 rounded-lg";
+                li.innerHTML = `<span><b>#${idx+1}</b> ${escapeHtml(row.name)}</span><span class="text-amber-400 font-bold">${row.score} 分</span>`;
+                listEl.appendChild(li);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        function confirmExit() { if (confirm("結束測驗並回到首頁？")) { if(wkTimerInterval) clearInterval(wkTimerInterval); showScreen('level-selection'); } }
         function showResult() { document.getElementById('final-score').textContent = score; showScreen('result-screen'); }
+        
         function speakWord() {
             const word = shuffledVocabulary[currentQuestionIndex]?.english || shuffledVocabulary[currentQuestionIndex]?.word;
             if (word) {
@@ -282,7 +462,7 @@
             }
         }
         function showScreen(id) {
-            ['level-selection', 'quiz-selection', 'quiz-screen', 'result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            ['level-selection', 'quiz-selection', 'quiz-screen', 'result-screen', 'wordking-result-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
         }
         function backToHome() { window.location.href = 'index.html'; }
