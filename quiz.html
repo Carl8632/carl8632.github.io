@@ -84,7 +84,6 @@
         <div id="quiz-screen" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="confirmExit()" class="text-xs bg-slate-200 px-3 py-1.5 rounded-full text-slate-600 font-bold">✕ 結束測驗</button>
-                <div id="wordking-timer-badge" class="hidden text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">⏱️ 本題耗時: <span id="timer-display">0.0</span>秒</div>
                 <div class="flex items-center space-x-2">
                     <span class="text-[10px] text-slate-400 font-bold">自動發音</span>
                     <label class="relative inline-block w-10 h-6">
@@ -156,9 +155,9 @@
         let isAnswering = false;
         let currentQuizType = "";
 
-        // 單字王比賽專屬變數
+        // 單字王比賽專屬變數 (改為整秒背景計時)
         let isWordKingMode = false;
-        let wkQuestionStartTime = 0;
+        let wkQuestionElapsedSeconds = 0;
         let wkQuestionTimerInterval = null;
         let wkCorrectCount = 0;
 
@@ -221,7 +220,6 @@
             isReviewingErrors = false;
 
             try {
-                // 獨立分開查詢並加入容錯，避免 Promise.all 因為某個等級回傳空而出錯
                 const elemRes = await myApp.from('words').select('*').eq('level', 'elementary');
                 const junRes = await myApp.from('words').select('*').eq('level', 'junior');
                 const senRes = await myApp.from('words').select('*').eq('level', 'senior');
@@ -235,7 +233,6 @@
                     return myAlert("資料庫中找不到單字資料！");
                 }
 
-                // 彈性抽題：若各級距數量不足指定數量，則自動從現有單字隨機補足 25 題
                 const pickedElem = [...elemWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(10, elemWords.length));
                 const remain1 = 10 - pickedElem.length;
                 
@@ -259,9 +256,7 @@
                 wkCorrectCount = 0;
                 document.getElementById('score').textContent = score;
 
-                document.getElementById('wordking-timer-badge').classList.remove('hidden');
                 showScreen('quiz-screen');
-
                 loadNextQuestion();
             } catch (err) {
                 console.error(err);
@@ -302,7 +297,6 @@
             currentQuizType = type;
             currentQuestionIndex = 0; score = 0;
             document.getElementById('score').textContent = score;
-            document.getElementById('wordking-timer-badge').classList.add('hidden');
             showScreen('quiz-screen');
             loadNextQuestion();
         }
@@ -344,14 +338,13 @@
                 container.appendChild(btn);
             });
 
-            // 如果是單字王模式，啟動單題計時器
+            // 單字王模式：背景私下以 1 秒為單位進行整秒計時
             if (isWordKingMode) {
-                wkQuestionStartTime = Date.now();
+                wkQuestionElapsedSeconds = 0;
                 if (wkQuestionTimerInterval) clearInterval(wkQuestionTimerInterval);
                 wkQuestionTimerInterval = setInterval(() => {
-                    const elapsed = ((Date.now() - wkQuestionStartTime) / 1000).toFixed(1);
-                    document.getElementById('timer-display').textContent = elapsed;
-                }, 100);
+                    wkQuestionElapsedSeconds++;
+                }, 1000);
             }
         }
 
@@ -380,14 +373,12 @@
                         baseScore = 300;
                     }
 
-                    // 2. 依照單題耗時計算時間加分
-                    const elapsedSeconds = (Date.now() - wkQuestionStartTime) / 1000;
+                    // 2. 依照整秒耗時計算時間加分 (1秒內答對+100分，每增加1秒少10分，超過10秒加0分)
                     let timeBonus = 0;
-                    if (elapsedSeconds <= 1.0) {
-                        timeBonus = 100; // 1秒內答對加100分
+                    if (wkQuestionElapsedSeconds <= 1) {
+                        timeBonus = 100;
                     } else {
-                        // 每增加1秒少10分，超過10秒加0分
-                        let calculatedBonus = 100 - Math.floor((elapsedSeconds - 1) * 10);
+                        let calculatedBonus = 100 - (wkQuestionElapsedSeconds - 1) * 10;
                         timeBonus = Math.max(0, calculatedBonus);
                     }
 
