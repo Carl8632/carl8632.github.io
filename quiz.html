@@ -241,10 +241,12 @@
                 
                 const pickedSen = [...senWords].sort(() => 0.5 - Math.random()).slice(0, Math.min(5 + Math.max(0, remain2), senWords.length));
 
-                shuffledVocabulary = [...pickedElem, ...pickedJun, ...pickedSen].sort(() => 0.5 - Math.random());
-                if (shuffledVocabulary.length > 25) {
-                    shuffledVocabulary = shuffledVocabulary.slice(0, 25);
-                }
+               // 讓各個級距內部各自隨機洗牌，但保持「前10題國小、中10題國中、後5題高中」的順序
+               const shuffledElem = [...pickedElem].sort(() => 0.5 - Math.random()).slice(0, 10);
+               const shuffledJun = [...pickedJun].sort(() => 0.5 - Math.random()).slice(0, 10);
+               const shuffledSen = [...pickedSen].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+               shuffledVocabulary = [...shuffledElem, ...shuffledJun, ...shuffledSen];
 
                 if (shuffledVocabulary.length < 5) {
                     return myAlert("題庫總單字數量過少，無法進行單字王比賽！");
