@@ -131,8 +131,8 @@
             </div>
 
             <div class="bg-slate-900 text-white p-3 rounded-2xl text-left">
-                <h3 class="text-xs font-bold text-amber-400 mb-2 text-center">🌟 單字王排行榜</h3>
-                <ul id="leaderboard-list" class="space-y-1 text-xs max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                <h3 class="text-xs font-bold text-amber-400 mb-2 text-center">🌟 單字王排行榜 (TOP 10)</h3>
+               <ul id="leaderboard-list" class="space-y-1.5 text-xs max-h-72 overflow-y-auto custom-scrollbar pr-1">
                     <li class="text-center text-slate-400 py-2">載入中...</li>
                 </ul>
             </div>
@@ -256,6 +256,9 @@
                 wkCorrectCount = 0;
                 document.getElementById('score').textContent = score;
 
+                // 每次進入比賽，重新顯示送出成績區塊
+                document.getElementById('wk-submit-box').style.display = 'block';
+
                 showScreen('quiz-screen');
                 loadNextQuestion();
             } catch (err) {
@@ -338,7 +341,6 @@
                 container.appendChild(btn);
             });
 
-            // 單字王模式：背景私下以 1 秒為單位進行整秒計時
             if (isWordKingMode) {
                 wkQuestionElapsedSeconds = 0;
                 if (wkQuestionTimerInterval) clearInterval(wkQuestionTimerInterval);
@@ -365,7 +367,6 @@
                     btn.classList.add('option-correct');
                     wkCorrectCount++;
 
-                    // 1. 依照題號區間決定基礎分 (1-10題:100分, 11-20題:200分, 21-25題:300分)
                     let baseScore = 100;
                     if (currentQuestionIndex >= 10 && currentQuestionIndex < 20) {
                         baseScore = 200;
@@ -373,7 +374,6 @@
                         baseScore = 300;
                     }
 
-                    // 2. 依照整秒耗時計算時間加分 (1秒內答對+100分，每增加1秒少10分，超過10秒加0分)
                     let timeBonus = 0;
                     if (wkQuestionElapsedSeconds <= 1) {
                         timeBonus = 100;
@@ -438,12 +438,43 @@
 
             if (!nickname) return myAlert("請輸入您的英雄榜顯示名稱！");
 
-            const { error } = await myApp.from('word_king_leaderboard').insert([{ name: nickname, score: finalScore }]);
+            // 檢查該學生是否已經送過成績 (用 studentId 或目前輸入的 nickname 作為唯一鍵判斷)
+            const { data: existingUser, error: checkError } = await myApp
+                .from('word_king_leaderboard')
+                .select('*')
+                .eq('name', nickname);
+
+            if (checkError) {
+                console.error(checkError);
+                return myAlert("檢查成績紀錄發生錯誤！");
+            }
+
+            let error;
+            if (existingUser && existingUser.length > 0) {
+                // 如果已經存在，則更新其分數 (保留最高分或直接覆蓋)
+                const currentBestScore = existingUser[0].score;
+                if (finalScore > currentBestScore) {
+                    const { error: updateErr } = await myApp
+                        .from('word_king_leaderboard')
+                        .update({ score: finalScore })
+                        .eq('name', nickname);
+                    error = updateErr;
+                }
+            } else {
+                // 如果不存在，則新增一筆
+                const { error: insertErr } = await myApp
+                    .from('word_king_leaderboard')
+                    .insert([{ name: nickname, score: finalScore }]);
+                error = insertErr;
+            }
+
             if (error) {
                 console.error(error);
-                myAlert("上傳失敗，請確認是否已在 Supabase 建立 word_king_leaderboard 資料表");
+                myAlert("上傳失敗，請稍後再試！");
             } else {
                 myAlert("成績成功送出並更新排行榜！");
+                // 隱藏送出輸入區，防止重複送出
+                document.getElementById('wk-submit-box').style.display = 'none';
                 fetchLeaderboard();
             }
         }
@@ -467,7 +498,8 @@
             data.forEach((row, idx) => {
                 const li = document.createElement('li');
                 li.className = "flex justify-between items-center px-3 py-1.5 bg-slate-800 rounded-lg";
-                li.innerHTML = `<span><b>#${idx+1}</b> ${escapeHtml(row.name)}</span><span class="text-amber-400 font-bold">${row.score} 分</span>`;
+                // 替名次加上獨立的顏色 (例如金黃色或亮青色)，與名字的白色區隔
+                li.innerHTML = `<span><b class="text-amber-400 font-extrabold mr-1.5">#${idx+1}</b> <span class="text-white">${escapeHtml(row.name)}</span></span><span class="text-amber-400 font-bold">${row.score} 分</span>`;
                 listEl.appendChild(li);
             });
         }
